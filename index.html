@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#103c32">
+  <meta name="description" content="실제 전자식 테이블에서 영감을 얻은 가상 바카라 시뮬레이터. 카드 애니메이션, 대로드, 통계와 시뮬레이션을 한 화면에서.">
+  <title>바카라 테이블 · BACCARAT TABLE</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./src/styles.css">
+  <script type="module" src="./src/app.js"></script>
+</head>
+<body>
+  <main class="machine" id="machine">
+    <header class="machine-header">
+      <a class="wordmark" href="./" aria-label="바카라 테이블 홈"><span class="brand-symbol" aria-hidden="true">♠</span><span>BACCARAT<small>THE VIRTUAL TABLE</small></span></a>
+      <div class="live-status" role="status" aria-live="polite"><span class="status-dot"></span><span id="status-text">배팅하십시오</span><small id="status-detail">칩을 선택하고 테이블을 터치하세요</small></div>
+      <div class="header-meta"><span class="virtual-tag">VIRTUAL PLAY</span><span class="table-id">TABLE <b>01</b></span><button class="icon-button" id="help-button" aria-label="게임 안내">?</button></div>
+    </header>
+
+    <section class="scoreboard" aria-label="현재 슈 결과 기록판">
+      <aside class="score-totals">
+        <div class="score-heading"><span>슈 기록</span><span id="shoe-label">SHOE 001</span></div>
+        <div class="score-row"><span class="stat-icon player-stat">P</span><span>플레이어</span><strong id="count-player">0</strong></div>
+        <div class="score-row"><span class="stat-icon banker-stat">B</span><span>뱅커</span><strong id="count-banker">0</strong></div>
+        <div class="score-row"><span class="stat-icon tie-stat">T</span><span>타이</span><strong id="count-tie">0</strong></div>
+        <div class="score-row"><span class="stat-icon player-pair-stat">P·P</span><span>플레이어 페어</span><strong id="count-playerPair">0</strong></div>
+        <div class="score-row"><span class="stat-icon banker-pair-stat">B·P</span><span>뱅커 페어</span><strong id="count-bankerPair">0</strong></div>
+        <div class="score-total"><span>총 게임</span><strong id="count-rounds">0</strong><span class="round-unit">ROUNDS</span></div>
+      </aside>
+      <div class="roads">
+        <div class="road-panel big-road-panel"><div class="road-caption"><span>BIG ROAD <span class="caption-ko">대로드</span></span><span class="road-legend"><i class="legend-ring blue"></i>플레이어 <i class="legend-ring red"></i>뱅커 <i class="legend-tie"></i>타이</span></div><div class="road-grid big-road" id="big-road" role="img" aria-label="대로드: 기록 없음"></div></div>
+        <div class="derived-roads">
+          <div class="road-panel"><div class="road-caption"><span>BIG EYE BOY <span class="caption-ko">빅아이</span></span><span class="road-type">◎</span></div><div class="road-grid mini-road" id="eye-road" role="img" aria-label="빅아이 로드: 기록 없음"></div></div>
+          <div class="road-panel"><div class="road-caption"><span>SMALL ROAD <span class="caption-ko">스몰로드</span></span><span class="road-type">●</span></div><div class="road-grid mini-road" id="small-road" role="img" aria-label="스몰 로드: 기록 없음"></div></div>
+          <div class="road-panel"><div class="road-caption"><span>COCKROACH <span class="caption-ko">코크로치</span></span><span class="road-type">╱</span></div><div class="road-grid mini-road" id="roach-road" role="img" aria-label="코크로치 로드: 기록 없음"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="felt" aria-label="바카라 배팅 테이블">
+      <svg class="table-lines" viewBox="0 0 1600 520" preserveAspectRatio="none" aria-hidden="true"><path d="M-80 4 Q800 164 1680 4"/><path d="M-80 42 Q800 210 1680 42"/><path d="M-80 430 Q800 586 1680 430"/></svg>
+      <div class="felt-side-note left-note"><span>♠</span><b>BACCARAT</b><small>COMMISSION TABLE</small></div>
+      <div class="felt-side-note right-note"><span>8</span><b>DECK SHOE</b><small>PLAYER · TIE · BANKER</small></div>
+      <div class="table-center">
+        <div class="pair-row"><button class="pair-zone player-pair" disabled><span>플레이어 페어</span><small>11대1 · 배팅 미지원</small></button><div class="table-ornament" aria-hidden="true">― ⟡ ―</div><button class="pair-zone banker-pair" disabled><span>뱅커 페어</span><small>11대1 · 배팅 미지원</small></button></div>
+        <div class="betting-zones">
+          <button class="bet-zone player-zone" id="bet-player" data-side="player" aria-label="플레이어에 선택한 칩 배팅">
+            <span class="zone-surface"></span><span class="zone-heading"><span class="zone-en">PLAYER</span><strong>플레이어</strong></span>
+            <span class="hand" id="hand-player" aria-label="플레이어 카드"></span><span class="hand-score" id="score-player"></span>
+            <span class="wager" id="wager-player"></span><span class="payout">1대1 지급</span><span class="winner-tag">WINNER</span>
+          </button>
+          <button class="bet-zone tie-zone" id="bet-tie" data-side="tie" aria-label="타이에 선택한 칩 배팅">
+            <span class="zone-surface"></span><span class="zone-heading"><span class="zone-en">TIE</span><strong>타이</strong></span>
+            <span class="tie-emblem" id="tie-emblem" aria-hidden="true">8 : 1</span><span class="wager" id="wager-tie"></span><span class="payout">8대1 지급</span><span class="winner-tag">TIE</span>
+          </button>
+          <button class="bet-zone banker-zone" id="bet-banker" data-side="banker" aria-label="뱅커에 선택한 칩 배팅">
+            <span class="zone-surface"></span><span class="zone-heading"><span class="zone-en">BANKER</span><strong>뱅커</strong></span>
+            <span class="hand" id="hand-banker" aria-label="뱅커 카드"></span><span class="hand-score" id="score-banker"></span>
+            <span class="wager" id="wager-banker"></span><span class="payout">1대0.95 지급</span><span class="winner-tag">WINNER</span>
+          </button>
+        </div>
+      </div>
+      <div class="table-footnote"><span>가상 칩 전용 · 현금 가치 없음</span><span id="deck-info">8 DECKS · STANDARD BACCARAT</span><span>최소 배팅 ₩1,000</span></div>
+    </section>
+
+    <footer class="console">
+      <div class="balance-panel"><div class="balance-label"><span>보유 가상 금액</span><span class="bet-availability" id="bet-availability">배팅 가능</span></div><strong class="balance-amount" id="balance">₩1,000,000</strong><div class="money-details"><div><span>총 배팅 금액</span><strong id="total-bet">₩0</strong></div><div><span>직전 게임 손익</span><strong id="last-profit">₩0</strong></div></div></div>
+      <div class="chip-tray"><div class="tray-caption"><span>SELECT YOUR CHIP</span><span id="selected-chip-label">선택한 칩 ₩1,000</span></div><div class="chips" role="group" aria-label="배팅 칩 선택">
+        <button class="casino-chip chip-1000 selected" data-chip="1000" aria-label="1,000원 칩 선택" aria-pressed="true"><span class="chip-face"><small>VIRTUAL CHIP</small><strong>₩1,000</strong><span>♠</span></span></button>
+        <button class="casino-chip chip-5000" data-chip="5000" aria-label="5,000원 칩 선택" aria-pressed="false"><span class="chip-face"><small>VIRTUAL CHIP</small><strong>₩5,000</strong><span>♠</span></span></button>
+        <button class="casino-chip chip-10000" data-chip="10000" aria-label="10,000원 칩 선택" aria-pressed="false"><span class="chip-face"><small>VIRTUAL CHIP</small><strong>₩10,000</strong><span>♠</span></span></button>
+        <button class="casino-chip chip-100000" data-chip="100000" aria-label="100,000원 칩 선택" aria-pressed="false"><span class="chip-face"><small>VIRTUAL CHIP</small><strong>₩100,000</strong><span>♠</span></span></button>
+      </div></div>
+      <div class="play-controls"><div class="bet-tools"><button id="undo-button" title="마지막 배팅 취소"><span aria-hidden="true">↶</span> 되돌리기</button><button id="clear-button">배팅 취소</button><button id="double-button">×2</button></div><button class="deal-button" id="deal-button"><span>게임 시작</span><span aria-hidden="true">→</span></button><button class="repeat-button" id="repeat-button"><span aria-hidden="true">↻</span> 이전 배팅 반복</button></div>
+      <nav class="utility-bar" aria-label="테이블 도구"><div class="utility-left"><span class="connection-dot"></span><span id="save-indicator">이 기기에 자동 저장</span><span class="utility-separator">/</span><span id="round-label">ROUND 000</span></div><div class="utility-actions"><button id="history-button"><span aria-hidden="true">▤</span> 게임 기록</button><button id="stats-button"><span aria-hidden="true">▥</span> 통계</button><button id="simulation-button"><span aria-hidden="true">▷</span> 시뮬레이션</button><button id="settings-button"><span aria-hidden="true">⚙</span> 설정</button><button id="fullscreen-button" aria-label="전체 화면" title="전체 화면">⛶</button></div></nav>
+    </footer>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <dialog id="panel-dialog" class="panel-dialog"><div class="dialog-header"><div><span class="eyebrow" id="dialog-eyebrow">TABLE 01</span><h1 id="dialog-title">게임 기록</h1></div><button class="close-button" id="close-dialog" aria-label="닫기">×</button></div><div id="dialog-body" class="dialog-body"></div></dialog>
+  <noscript>이 시뮬레이터를 사용하려면 브라우저의 JavaScript를 켜주세요.</noscript>
+</body>
+</html>

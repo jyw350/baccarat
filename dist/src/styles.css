@@ -1,0 +1,2473 @@
+@charset "UTF-8";
+:root {
+  color-scheme:dark;
+  --felt:#124a3b;
+  --cream:#f2eee0;
+  --muted:#a9bcb2;
+  --gold:#ddc48e;
+  --red:#ee4947;
+  --blue:#3f9ff0;
+  --green:#82e14b;
+  --line:#dce7d8;
+  --panel:#252c2d;
+  font-family:"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;
+  font-synthesis:none;
+  font-weight:400;
+}
+
+* {
+  box-sizing:border-box;
+}
+
+body {
+  margin:0;
+  background:#0b211d;
+  color:var(--cream);
+}
+
+button,input,select {
+  font:inherit;
+}
+
+button {
+  cursor:pointer;
+  color:inherit;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+
+button:disabled {
+  cursor:default;
+}
+
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
+  outline:3px solid #f7df9e;
+  outline-offset:5px;
+}
+
+button {
+  border:0;
+}
+
+a {
+  color:inherit;
+}
+
+button,span {
+  -webkit-user-select:none;
+}
+
+button strong {
+  font-weight:800;
+}
+
+strong {
+  font-variant-numeric:tabular-nums;
+}
+
+svg {
+  display:block;
+}
+
+.machine {
+  height:100svh;
+  min-height:720px;
+  max-height:1440px;
+  max-width:2560px;
+  margin:auto;
+  display:grid;
+  grid-template-rows:76px minmax(215px,29fr) minmax(300px,43fr) minmax(206px,23fr);
+  overflow:hidden;
+  background:radial-gradient(ellipse at 50% 34%,#215b45 0%,#164735 55%,#103b30 100%);
+  position:relative;
+}
+
+.machine::before {
+  content:"";
+  pointer-events:none;
+  position:absolute;
+  inset:0;
+  z-index:0;
+  opacity:.12;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' opacity='.5' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.machine>* {
+  position:relative;
+}
+
+.machine-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 2.4%;
+  background:linear-gradient(#102f29ed,#12382e88);
+  border-bottom:1px solid #c9d4b524;
+  z-index:2;
+}
+
+.wordmark {
+  text-decoration:none;
+  display:flex;
+  align-items:center;
+  gap:13px;
+  font-family:Georgia,serif;
+  font-size:24px;
+  letter-spacing:3px;
+  color:var(--gold);
+}
+
+.wordmark small {
+  display:block;
+  margin-top:4px;
+  font-family:Arial,sans-serif;
+  letter-spacing:3.5px;
+  font-size:8px;
+  color:#b4c4b5;
+}
+
+.brand-symbol {
+  font-size:43px;
+  line-height:1;
+}
+
+.live-status {
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  font-size:23px;
+  font-weight:700;
+  letter-spacing:3px;
+  white-space:nowrap;
+}
+
+.live-status small {
+  display:none;
+}
+
+.status-dot,.connection-dot {
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#96d98e;
+  box-shadow:0 0 12px #83dca378;
+}
+
+.header-meta {
+  display:flex;
+  align-items:center;
+  gap:24px;
+  font-size:12px;
+  color:#c0cdc4;
+}
+
+.virtual-tag {
+  padding:6px 10px;
+  border:1px solid #bfcaaa3d;
+  border-radius:3px;
+  font-size:9px;
+  letter-spacing:1.8px;
+  color:#d7d8b9;
+}
+
+.table-id {
+  letter-spacing:2px;
+}
+
+.table-id b {
+  color:var(--gold);
+  margin-left:3px;
+}
+
+.icon-button {
+  width:32px;
+  height:32px;
+  background:transparent;
+  border:1px solid #d5dfce59;
+  border-radius:50%;
+  font-family:Georgia,serif;
+  font-size:18px;
+  color:#d5dfce;
+}
+
+.scoreboard {
+  display:grid;
+  grid-template-columns:minmax(190px,15.5%) 1fr;
+  gap:22px;
+  padding:19px 3% 13px;
+  z-index:1;
+}
+
+.score-totals {
+  display:flex;
+  flex-direction:column;
+  padding:0 18px 0 0;
+  border-right:1px solid #dce7d845;
+  min-height:0;
+}
+
+.score-heading {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:13px;
+  font-weight:700;
+  padding:2px 0 10px;
+}
+
+.score-heading>span:last-child {
+  font:10px Arial,sans-serif;
+  letter-spacing:1px;
+  color:#b8cbb7;
+}
+
+.score-row {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex:1;
+  font-size:12px;
+  min-height:24px;
+}
+
+.score-row strong {
+  margin-left:auto;
+  font-size:19px;
+  font-weight:500;
+}
+
+.stat-icon {
+  width:30px;
+  height:25px;
+  border-radius:3px;
+  display:grid;
+  place-items:center;
+  font:bold 12px Arial,sans-serif;
+  color:white;
+}
+
+.player-stat {
+  background:#3189cc;
+}
+
+.banker-stat {
+  background:#ca4e4d;
+}
+
+.tie-stat {
+  background:#408950;
+}
+
+.player-pair-stat {
+  background:#c97599;
+}
+
+.banker-pair-stat {
+  background:#946cae;
+}
+
+.score-total {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  border-top:1px solid #dce7d838;
+  margin-top:8px;
+  padding:9px 0 0;
+  font-size:12px;
+}
+
+.score-total strong {
+  margin-left:auto;
+  font-size:20px;
+  font-weight:600;
+}
+
+.round-unit {
+  font-size:8px;
+  letter-spacing:1px;
+  color:#a9bda9;
+}
+
+.roads {
+  min-width:0;
+  display:grid;
+  grid-template-rows:minmax(0,1.4fr) minmax(0,1fr);
+  gap:11px;
+}
+
+.road-panel {
+  min-height:0;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+}
+
+.road-caption {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 2px 6px;
+  font-size:9px;
+  letter-spacing:1.5px;
+  color:#c0d0be;
+  font-weight:600;
+  height:21px;
+  flex-shrink:0;
+}
+
+.caption-ko {
+  font-size:9px;
+  letter-spacing:0;
+  font-weight:400;
+  margin-left:7px;
+  color:#92b19d;
+}
+
+.road-legend {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:9px;
+  font-weight:400;
+  letter-spacing:0;
+}
+
+.legend-ring {
+  width:9px;
+  height:9px;
+  border:2px solid;
+  border-radius:50%;
+  margin-left:9px;
+}
+
+.legend-ring.blue {
+  color:#367ecb;
+}
+
+.legend-ring.red {
+  color:#d45256;
+}
+
+.legend-tie {
+  width:10px;
+  height:2px;
+  transform:rotate(-45deg);
+  background:#66bf7a;
+  margin-left:9px;
+}
+
+.road-grid {
+  --cell:20px;
+  position:relative;
+  flex:1;
+  min-height:0;
+  background-color:#f6f4e9;
+  background-image:linear-gradient(to right,#526b6a33 1px,transparent 1px),linear-gradient(to bottom,#526b6a33 1px,transparent 1px);
+  background-size:var(--cell) var(--cell);
+  border:1px solid #cbd4c0;
+  box-shadow:0 3px 6px #04170e40;
+  border-radius:2px;
+  overflow:hidden;
+  color:#1e322b;
+}
+
+.derived-roads {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:15px;
+}
+
+.road-type {
+  font-size:12px;
+  color:#bfcebe;
+}
+
+.road-mark {
+  position:absolute;
+  left:calc(var(--column)*var(--cell));
+  top:calc(var(--row)*var(--cell));
+  width:var(--cell);
+  height:var(--cell);
+  display:grid;
+  place-items:center;
+}
+
+.road-mark::before {
+  content:"";
+  width:65%;
+  height:65%;
+  border:2px solid currentColor;
+  border-radius:50%;
+}
+
+.road-mark.player,.road-mark.blue {
+  color:#347cc9;
+}
+
+.road-mark.banker,.road-mark.red {
+  color:#d94a4f;
+}
+
+.road-mark.tie {
+  color:#3e9b57;
+}
+
+.road-mark.tie::before {
+  border-color:transparent;
+}
+
+.road-mark.with-tie::after {
+  content:"";
+  position:absolute;
+  left:20%;
+  top:48%;
+  width:64%;
+  height:2px;
+  background:#3a9b55;
+  transform:rotate(-47deg);
+}
+
+.tie-count {
+  position:absolute;
+  font:700 8px Arial;
+  color:#206b36;
+  right:1px;
+  bottom:0;
+  z-index:2;
+}
+
+.pair-dot {
+  position:absolute;
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  border:1px solid #f5f4eb;
+  z-index:2;
+}
+
+.pair-dot.pp {
+  top:1px;
+  left:1px;
+  background:#d16199;
+}
+
+.pair-dot.bp {
+  bottom:1px;
+  right:1px;
+  background:#9163b4;
+}
+
+.road-mark.solid::before {
+  width:59%;
+  height:59%;
+  background:currentColor;
+  border:0;
+}
+
+.road-mark.slash::before {
+  width:70%;
+  height:2px;
+  border:0;
+  background:currentColor;
+  transform:rotate(-50deg);
+  border-radius:0;
+}
+
+.felt {
+  min-height:0;
+  padding:12px 10.6% 34px;
+  isolation:isolate;
+}
+
+.table-lines {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:-1;
+  pointer-events:none;
+  fill:none;
+  stroke:#e6e7d5;
+  stroke-width:2;
+  opacity:.8;
+}
+
+.table-lines path:nth-child(2) {
+  opacity:.35;
+  stroke-width:1;
+}
+
+.felt-side-note {
+  position:absolute;
+  top:37%;
+  width:9%;
+  display:flex;
+  align-items:center;
+  flex-direction:column;
+  color:#c6d4bb70;
+}
+
+.left-note {
+  left:.8%;
+}
+
+.right-note {
+  right:.8%;
+}
+
+.felt-side-note>span {
+  font:55px Georgia,serif;
+  line-height:1;
+}
+
+.felt-side-note b {
+  font:12px Georgia,serif;
+  letter-spacing:2px;
+  margin-top:12px;
+}
+
+.felt-side-note small {
+  font:6px Arial;
+  letter-spacing:1.6px;
+  margin-top:7px;
+  white-space:nowrap;
+}
+
+.table-center {
+  height:100%;
+  display:flex;
+  flex-direction:column;
+}
+
+.pair-row {
+  height:65px;
+  flex-shrink:0;
+  display:grid;
+  grid-template-columns:1fr .83fr 1fr;
+  gap:9px;
+  padding:0 3%;
+}
+
+.pair-zone {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  background:transparent;
+  border:1px solid #cddcc156;
+  border-top:0;
+  border-bottom:0;
+  transform:skewX(-9deg);
+  color:#d2dbc5b3;
+  font-size:16px;
+  letter-spacing:2px;
+}
+
+.banker-pair {
+  transform:skewX(9deg);
+}
+
+.pair-zone>* {
+  transform:skewX(9deg);
+}
+
+.banker-pair>* {
+  transform:skewX(-9deg);
+}
+
+.pair-zone small {
+  font-size:9px;
+  letter-spacing:1px;
+  opacity:.65;
+}
+
+.table-ornament {
+  display:grid;
+  place-items:center;
+  color:#c4d8b98a;
+  font:29px Georgia;
+  letter-spacing:8px;
+}
+
+.betting-zones {
+  display:grid;
+  grid-template-columns:1fr .83fr 1fr;
+  gap:5px;
+  flex:1;
+  min-height:0;
+}
+
+.bet-zone {
+  --accent:var(--red);
+  position:relative;
+  background:transparent;
+  isolation:isolate;
+  display:flex;
+  align-items:center;
+  flex-direction:column;
+  min-width:0;
+  padding:24px 10px 15px;
+  transition:filter .2s;
+  overflow:visible;
+}
+
+.zone-surface {
+  position:absolute;
+  inset:0;
+  background:var(--accent);
+  z-index:-2;
+  clip-path:polygon(13% 0,100% 0,92% 100%,0 94%);
+  filter:none;
+}
+
+.zone-surface::before {
+  content:"";
+  position:absolute;
+  inset:3px;
+  background:radial-gradient(ellipse at 50% 0,#204d39,#133b2d 80%);
+  clip-path:polygon(13% 0,100% 0,92% 100%,0 94%);
+}
+
+.player-zone {
+  padding-left:12%;
+}
+
+.banker-zone {
+  --accent:var(--blue);
+  padding-right:12%;
+}
+
+.banker-zone .zone-surface,.banker-zone .zone-surface::before {
+  clip-path:polygon(0 0,87% 0,100% 94%,8% 100%);
+}
+
+.tie-zone {
+  --accent:var(--green);
+  padding-top:40px;
+}
+
+.tie-zone .zone-surface,.tie-zone .zone-surface::before {
+  clip-path:polygon(5% 14%,95% 14%,100% 100%,0 100%);
+}
+
+.tie-zone .zone-surface::before {
+  background:radial-gradient(ellipse at 50% 0,#2b5034,#173e2c 80%);
+}
+
+.bet-zone:not(:disabled):hover {
+  filter:brightness(1.16);
+}
+
+.bet-zone:active:not(:disabled) {
+  filter:brightness(1.3);
+}
+
+.zone-heading {
+  width:80%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:7px;
+  position:relative;
+  z-index:1;
+}
+
+.zone-en {
+  font:10px Arial;
+  letter-spacing:4px;
+  color:#f1efdbb5;
+}
+
+.zone-heading strong {
+  display:block;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 85%,white),var(--accent));
+  width:100%;
+  padding:10px 4px 12px;
+  border-radius:3px;
+  box-shadow:inset 0 1px #ffffff40,0 4px 10px #05170e30;
+  font-size:clamp(19px,1.7vw,32px);
+  line-height:1.1;
+  letter-spacing:5px;
+  color:#fff;
+  text-shadow:0 1px 2px #0003;
+}
+
+.tie-zone .zone-heading strong {
+  color:#f8fff5;
+  background:linear-gradient(#7ad946,#58bc34);
+  text-shadow:0 1px 3px #26581a99;
+}
+
+.hand {
+  height:clamp(59px,8.8vh,105px);
+  display:flex;
+  gap:6px;
+  align-items:center;
+  justify-content:center;
+  margin-top:15px;
+  min-width:0;
+  width:100%;
+  pointer-events:none;
+}
+
+.playing-card {
+  height:100%;
+  aspect-ratio:.7;
+  background:#faf8f0;
+  color:#1d2931;
+  border-radius:4px;
+  border:1px solid #c6cbbd;
+  box-shadow:0 3px 6px #041e1e50;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font:clamp(18px,2.2vw,36px) Georgia;
+  transform-origin:center;
+  animation:deal-in .36s ease-out both;
+}
+
+.playing-card.red-suit {
+  color:#c54145;
+}
+
+.card-corner {
+  position:absolute;
+  left:5px;
+  top:4px;
+  font:bold clamp(10px,.85vw,16px) Georgia;
+  display:flex;
+  flex-direction:column;
+  line-height:1.1;
+}
+
+.card-corner.bottom {
+  left:auto;
+  top:auto;
+  right:5px;
+  bottom:4px;
+  transform:rotate(180deg);
+}
+
+.card-center {
+  font-size:1.15em;
+}
+
+.hand-score {
+  position:absolute;
+  right:9%;
+  top:44%;
+  font-size:20px;
+  color:var(--cream);
+  font-weight:700;
+  background:#041e1bd1;
+  min-width:28px;
+  height:28px;
+  line-height:28px;
+  border-radius:50%;
+  box-shadow:0 0 0 1px #e7e7d363;
+}
+
+.hand-score:empty {
+  display:none;
+}
+
+.banker-zone .hand-score {
+  right:auto;
+  left:9%;
+}
+
+.wager {
+  min-height:40px;
+  position:absolute;
+  bottom:44px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+
+.wager-amount {
+  font-size:16px;
+  background:#09271fc9;
+  padding:5px 10px;
+  border-radius:3px;
+  box-shadow:0 0 0 1px #d4dcca22;
+}
+
+.chip-stack {
+  position:relative;
+  width:39px;
+  height:39px;
+  display:block;
+  animation:chip-in .22s ease-out;
+}
+
+.mini-chip {
+  position:absolute;
+  left:0;
+  bottom:calc(var(--stack)*4px);
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:repeating-conic-gradient(var(--chip-pattern) 0 13deg,var(--chip-base) 13deg 45deg);
+  box-shadow:0 2px 0 color-mix(in srgb,var(--chip-base),black 50%),0 3px 3px #0006;
+  border:1px solid #ffffff50;
+}
+
+.mini-chip::after {
+  content:"♠";
+  position:absolute;
+  inset:7px;
+  background:#eeeade;
+  border-radius:50%;
+  border:2px solid var(--chip-base);
+  display:grid;
+  place-items:center;
+  color:#28343a;
+  font-size:12px;
+}
+
+.payout {
+  margin-top:auto;
+  font-size:14px;
+  letter-spacing:2px;
+  position:absolute;
+  bottom:16px;
+  color:#e1e7d8;
+}
+
+.tie-emblem {
+  font:38px Georgia;
+  color:#9bc18b24;
+  letter-spacing:5px;
+  margin:auto;
+  position:absolute;
+  top:54%;
+  pointer-events:none;
+}
+
+.winner-tag {
+  position:absolute;
+  top:-12px;
+  background:var(--gold);
+  color:#173b29;
+  font:700 9px Arial;
+  letter-spacing:2px;
+  padding:5px 12px;
+  border-radius:2px;
+  opacity:0;
+  visibility:hidden;
+  transform:translateY(5px);
+  transition:.2s;
+}
+
+.bet-zone.winning {
+  filter:brightness(1.15);
+  animation:winner-glow 1s ease-in-out 2;
+}
+
+.winning .zone-surface {
+  background:#f2da9f;
+}
+
+.winning .winner-tag {
+  opacity:1;
+  visibility:visible;
+  transform:translateY(0);
+}
+
+.table-footnote {
+  position:absolute;
+  bottom:9px;
+  left:3%;
+  right:3%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-size:9px;
+  color:#b6c9ae87;
+  letter-spacing:.5px;
+}
+
+.table-footnote>span:nth-child(2) {
+  font-size:8px;
+  letter-spacing:2px;
+}
+
+.console {
+  background:linear-gradient(110deg,#242c2d,#343b3b 53%,#252d2e);
+  display:grid;
+  grid-template-columns:28% 43% 29%;
+  grid-template-rows:1fr 39px;
+  border-top:3px solid #bdc6bb;
+  box-shadow:0 -7px 0 #122e26,0 -9px 0 #ffffff27,0 -12px 25px #08251b55;
+  z-index:2;
+  padding:0 3%;
+  position:relative;
+}
+
+.balance-panel {
+  padding:22px 7% 15px 0;
+  align-self:center;
+}
+
+.balance-label {
+  display:flex;
+  gap:16px;
+  align-items:center;
+  font-size:11px;
+  color:#b9c4bd;
+  letter-spacing:.2px;
+}
+
+.bet-availability {
+  font-size:9px;
+  color:#b5d6ab;
+  padding:3px 7px;
+  border:1px solid #a4c99a38;
+  border-radius:3px;
+}
+
+.balance-amount {
+  font:500 clamp(25px,2.45vw,47px) Arial,sans-serif;
+  letter-spacing:-1.6px;
+  display:block;
+  margin-top:9px;
+  color:#fffaf0;
+  text-shadow:0 1px 10px #fff1;
+}
+
+.money-details {
+  display:flex;
+  gap:25px;
+  margin-top:14px;
+}
+
+.money-details>div {
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+
+.money-details span {
+  font-size:10px;
+  color:#a3b0a9;
+}
+
+.money-details strong {
+  font:500 15px Arial;
+  color:#ebe9db;
+}
+
+.money-details strong.positive,.positive {
+  color:#9eddb0!important;
+}
+
+.money-details strong.negative,.negative {
+  color:#f59b94!important;
+}
+
+.chip-tray {
+  border-left:1px solid #dce7d814;
+  border-right:1px solid #dce7d814;
+  padding:16px 5% 12px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.tray-caption {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font:8px Arial;
+  letter-spacing:2px;
+  color:#9da9a3;
+  margin-bottom:16px;
+}
+
+.tray-caption>span:last-child {
+  font-family:inherit;
+  font-size:10px;
+  letter-spacing:.4px;
+  color:#c9c4ae;
+}
+
+.chips {
+  display:flex;
+  justify-content:space-around;
+  align-items:center;
+  gap:15px;
+}
+
+.casino-chip {
+  --chip-base:#2458d9;
+  --chip-pattern:#ef6454;
+  position:relative;
+  flex-shrink:0;
+  width:clamp(72px,7.15vw,138px);
+  aspect-ratio:1;
+  border-radius:50%;
+  background:repeating-conic-gradient(from -6deg,var(--chip-pattern) 0 13deg,var(--chip-base) 13deg 45deg);
+  padding:0;
+  border:2px solid #ffffff38;
+  box-shadow:0 3px 0 color-mix(in srgb,var(--chip-base),black 30%),0 6px 0 color-mix(in srgb,var(--chip-base),black 55%),0 9px 12px #0c1219a0,inset 0 0 0 3px #0001;
+  transition:transform .18s,outline-color .18s;
+  isolation:isolate;
+}
+
+.casino-chip::before {
+  content:"";
+  position:absolute;
+  inset:8%;
+  border-radius:50%;
+  background:var(--chip-base);
+  border:1px dashed #ffffff69;
+  box-shadow:inset 0 0 6px #0008;
+  z-index:-1;
+}
+
+.chip-face {
+  position:absolute;
+  inset:21%;
+  border-radius:50%;
+  background:radial-gradient(circle at 35% 28%,#fffdf5,#d6d8d2);
+  border:2px solid #c5c6c3;
+  box-shadow:0 0 0 4px #1921299c,inset 0 2px 4px #fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  color:#2b3032;
+  gap:3px;
+}
+
+.chip-face small {
+  font:5px Arial;
+  letter-spacing:.7px;
+  color:#5e6561;
+}
+
+.chip-face strong {
+  font:bold clamp(11px,1.2vw,22px) Georgia,serif;
+  letter-spacing:-.6px;
+}
+
+.chip-face>span {
+  font:11px Georgia;
+  color:#767870;
+}
+
+.chip-1000 {
+  --chip-base:#2458d9;
+  --chip-pattern:#ef6454;
+}
+
+.chip-5000 {
+  --chip-base:#274cdb;
+  --chip-pattern:#f4f1de;
+}
+
+.chip-10000 {
+  --chip-base:#262c30;
+  --chip-pattern:#edda47;
+}
+
+.chip-100000 {
+  --chip-base:#e98529;
+  --chip-pattern:#252a29;
+}
+
+.casino-chip.selected {
+  outline:2px solid var(--gold);
+  outline-offset:6px;
+  transform:translateY(-3px) scale(1.04);
+}
+
+.casino-chip:hover {
+  transform:translateY(-5px);
+}
+
+.casino-chip.selected::after {
+  content:"";
+  position:absolute;
+  bottom:-18px;
+  left:calc(50% - 3px);
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:var(--gold);
+}
+
+.play-controls {
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:15px 0 12px 9%;
+  gap:9px;
+}
+
+.bet-tools {
+  display:flex;
+  gap:7px;
+}
+
+.bet-tools button {
+  height:34px;
+  background:#1c2425;
+  border:1px solid #b0bcb329;
+  border-radius:4px;
+  font-size:11px;
+  flex:1;
+  white-space:nowrap;
+}
+
+.bet-tools button:first-child {
+  flex:1.4;
+}
+
+.bet-tools button:last-child {
+  flex:.6;
+  font-size:15px;
+}
+
+.bet-tools button span {
+  font-size:17px;
+  vertical-align:-1px;
+  margin-right:3px;
+}
+
+.bet-tools button:disabled,.repeat-button:disabled {
+  opacity:.35;
+}
+
+.deal-button {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:linear-gradient(#e9d5a4,#c7ad77);
+  height:57px;
+  border-radius:4px;
+  padding:0 24px;
+  color:#24372b;
+  font-size:19px;
+  letter-spacing:2px;
+  font-weight:800;
+  box-shadow:0 3px 0 #8a7753,inset 0 1px 0 #fff9;
+}
+
+.deal-button>span:last-child {
+  font-size:27px;
+  font-weight:400;
+}
+
+.deal-button:disabled {
+  filter:saturate(.4);
+  opacity:.45;
+  box-shadow:none;
+}
+
+.deal-button:hover:not(:disabled) {
+  filter:brightness(1.1);
+}
+
+.repeat-button {
+  background:transparent;
+  font-size:11px;
+  letter-spacing:.4px;
+  color:#bdc7bf;
+  padding:6px;
+  min-height:25px;
+}
+
+.repeat-button>span {
+  font-size:16px;
+  vertical-align:-1px;
+  margin-right:5px;
+}
+
+.utility-bar {
+  grid-column:1/-1;
+  border-top:1px solid #d6e0d115;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-size:9px;
+  color:#9ba9a1;
+}
+
+.utility-left {
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+
+.connection-dot {
+  height:5px;
+  width:5px;
+  box-shadow:none;
+  background:#91ba8f;
+}
+
+.utility-separator {
+  margin:0 9px;
+  opacity:.4;
+}
+
+.utility-actions {
+  display:flex;
+  align-items:center;
+  gap:25px;
+}
+
+.utility-actions button {
+  background:transparent;
+  color:#bac4bd;
+  font-size:10px;
+  padding:7px 0;
+  min-height:32px;
+}
+
+.utility-actions button>span {
+  font-size:14px;
+  margin-right:6px;
+  vertical-align:-1px;
+  color:#b8bca5;
+}
+
+#fullscreen-button {
+  font-size:20px;
+  margin-left:3px;
+}
+
+.utility-actions button:hover,.repeat-button:hover:not(:disabled) {
+  color:#f4e3b8;
+}
+
+.toast {
+  position:fixed;
+  left:50%;
+  bottom:230px;
+  transform:translate(-50%,10px);
+  padding:12px 21px;
+  background:#132b26f5;
+  border:1px solid #d7c18c88;
+  border-radius:6px;
+  box-shadow:0 6px 24px #0005;
+  color:#f6edd7;
+  font-size:13px;
+  z-index:20;
+  opacity:0;
+  pointer-events:none;
+  transition:.2s;
+  max-width:90vw;
+  text-align:center;
+}
+
+.toast.visible {
+  opacity:1;
+  transform:translate(-50%,0);
+}
+
+.panel-dialog {
+  color:#e7eee3;
+  border:1px solid #9caf9d60;
+  border-radius:12px;
+  padding:0;
+  width:min(800px,94vw);
+  max-height:87svh;
+  background:#152e27;
+  box-shadow:0 30px 120px #0009;
+}
+
+.panel-dialog::backdrop {
+  background:#051811c9;
+  backdrop-filter:blur(5px);
+}
+
+.dialog-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:26px 30px 21px;
+  border-bottom:1px solid #bfcbb628;
+}
+
+.eyebrow {
+  font:10px Arial;
+  color:var(--gold);
+  letter-spacing:2px;
+}
+
+h1 {
+  font-size:24px;
+  margin:7px 0 0;
+  letter-spacing:-.5px;
+}
+
+.close-button {
+  background:#ffffff0a;
+  border:1px solid #fff2;
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  font-size:26px;
+  font-weight:200;
+  color:#b8c7b9;
+}
+
+.dialog-body {
+  padding:25px 30px 30px;
+  overflow:auto;
+  max-height:calc(87svh - 110px);
+  font-size:13px;
+  line-height:1.8;
+}
+
+.dialog-body h2 {
+  font-size:15px;
+  color:#e1c893;
+  margin:22px 0 9px;
+}
+
+.dialog-body p {
+  color:#b6c7b9;
+  margin-top:0;
+}
+
+.dialog-body .note {
+  font-size:11px;
+  color:#9cb2a3;
+  margin-top:15px;
+}
+
+.dialog-body a {
+  color:#dec891;
+}
+
+.dialog-body ul {
+  padding-left:20px;
+  color:#b6c7b9;
+}
+
+.dialog-body table {
+  width:100%;
+  border-collapse:collapse;
+  font-size:12px;
+}
+
+.dialog-body th {
+  text-align:left;
+  color:#8fa999;
+  font-size:10px;
+  font-weight:400;
+  white-space:nowrap;
+}
+
+.dialog-body td,.dialog-body th {
+  padding:11px 9px;
+  border-bottom:1px solid #aebca51c;
+}
+
+.dialog-body td {
+  white-space:nowrap;
+}
+
+.dialog-body .table-wrap {
+  overflow-x:auto;
+}
+
+.dialog-toolbar {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:17px;
+}
+
+.secondary-button,.primary-button {
+  min-height:42px;
+  border-radius:4px;
+  padding:9px 16px;
+  font-size:12px;
+  background:#254337;
+  border:1px solid #bdd0b233;
+  color:#dae5d5;
+}
+
+.primary-button {
+  background:var(--gold);
+  color:#203b2b;
+  font-weight:700;
+}
+
+.primary-button:disabled,.secondary-button:disabled {
+  opacity:.4;
+}
+
+.empty-state {
+  text-align:center;
+  padding:45px 0;
+  color:#9fb2a3;
+}
+
+.empty-state strong {
+  display:block;
+  font-size:18px;
+  color:#d9e5d3;
+  margin-bottom:10px;
+}
+
+.stats-grid {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  margin:20px 0;
+}
+
+.stat-box {
+  border:1px solid #d4dcc124;
+  border-radius:5px;
+  padding:17px;
+}
+
+.stat-box span {
+  font-size:11px;
+  color:#a4b8a8;
+  display:block;
+}
+
+.stat-box strong {
+  font:500 23px Arial;
+  display:block;
+  margin-top:7px;
+  color:#efe7d3;
+}
+
+.distribution {
+  display:flex;
+  height:12px;
+  border-radius:3px;
+  overflow:hidden;
+  margin:20px 0 10px;
+  background:#ffffff0c;
+}
+
+.distribution>span {
+  min-width:0;
+}
+
+.distribution-labels {
+  display:flex;
+  justify-content:space-between;
+  font-size:11px;
+  color:#acbfaf;
+}
+
+.form-row {
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:15px;
+  margin:20px 0;
+}
+
+.form-row label {
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  color:#aabdac;
+  font-size:11px;
+}
+
+select,input[type=number] {
+  min-width:0;
+  width:100%;
+  background:#0d251f;
+  border:1px solid #a8bba54d;
+  border-radius:4px;
+  padding:11px 12px;
+  color:#e6e9da;
+  min-height:45px;
+  font-size:13px;
+}
+
+.form-actions {
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+progress {
+  width:100%;
+  height:9px;
+  accent-color:var(--gold);
+  margin-top:22px;
+}
+
+.sim-chart {
+  width:100%;
+  height:160px;
+  background:#0d251f;
+  border:1px solid #9db79433;
+  border-radius:4px;
+  margin-top:18px;
+}
+
+.setting-row {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:17px 0;
+  border-bottom:1px solid #bfc9ae26;
+  gap:20px;
+}
+
+.setting-row small {
+  display:block;
+  color:#91ac99;
+  font-size:11px;
+  margin-top:4px;
+}
+
+.setting-row input {
+  accent-color:var(--gold);
+  width:20px;
+  height:20px;
+}
+
+.danger-button {
+  background:#713b32;
+  color:#ffe2da;
+  border:1px solid #b5655455;
+  padding:10px 15px;
+  border-radius:4px;
+  min-height:42px;
+}
+
+.result-pill {
+  padding:3px 8px;
+  border-radius:3px;
+  font-size:10px;
+  background:#2a4d3b;
+  color:#cde5bd;
+}
+
+.result-pill.player {
+  background:#274965;
+  color:#a3d4ff;
+}
+
+.result-pill.banker {
+  background:#673c3b;
+  color:#ffb4b3;
+}
+
+.result-pill.tie {
+  background:#305737;
+  color:#b1e5ac;
+}
+
+.chart-labels {
+  display:flex;
+  justify-content:space-between;
+  font:10px Arial;
+  color:#93ab9a;
+}
+
+.mobile-only {
+  display:none;
+}
+
+@keyframes deal-in {
+  from {
+    opacity:0;
+    transform:translate(25px,-30px) rotateY(90deg) rotate(8deg);
+  }
+  to {
+    opacity:1;
+    transform:translate(0,0) rotateY(0) rotate(0);
+  }
+}
+
+@keyframes chip-in {
+  from {
+    transform:translateY(-18px) scale(.85);
+    opacity:0;
+  }
+  to {
+    transform:translateY(0);
+    opacity:1;
+  }
+}
+
+@keyframes winner-glow {
+  50% {
+    filter:brightness(1.5);
+  }
+}
+
+@media(min-width:1700px) {
+  .machine-header {
+    padding:0 3%;
+  }
+  .machine {
+    grid-template-rows:86px minmax(240px,29fr) minmax(360px,43fr) minmax(240px,23fr);
+  }
+  .scoreboard {
+    gap:28px;
+    padding-top:23px;
+    padding-bottom:17px;
+  }
+  .score-row {
+    font-size:14px;
+    gap:14px;
+  }
+  .score-row strong {
+    font-size:23px;
+  }
+  .stat-icon {
+    width:37px;
+    height:30px;
+    font-size:13px;
+  }
+  .score-heading {
+    font-size:15px;
+  }
+  .score-heading>span:last-child {
+    font-size:11px;
+  }
+  .road-caption {
+    font-size:10px;
+    height:24px;
+  }
+  .caption-ko,.road-legend {
+    font-size:10px;
+  }
+  .pair-row {
+    height:78px;
+  }
+  .pair-zone {
+    font-size:19px;
+  }
+  .pair-zone small {
+    font-size:11px;
+  }
+  .bet-zone {
+    padding-top:29px;
+  }
+  .tie-zone {
+    padding-top:49px;
+  }
+  .zone-heading {
+    gap:10px;
+  }
+  .zone-heading strong {
+    padding:13px 4px 15px;
+  }
+  .zone-en {
+    font-size:11px;
+  }
+  .hand {
+    margin-top:20px;
+  }
+  .wager {
+    bottom:48px;
+  }
+  .wager-amount {
+    font-size:18px;
+  }
+  .payout {
+    font-size:17px;
+    bottom:18px;
+  }
+  .table-footnote {
+    font-size:10px;
+    bottom:8px;
+  }
+  .balance-label {
+    font-size:13px;
+  }
+  .bet-availability {
+    font-size:10px;
+  }
+  .money-details {
+    gap:40px;
+    margin-top:18px;
+  }
+  .money-details span {
+    font-size:11px;
+  }
+  .money-details strong {
+    font-size:18px;
+  }
+  .tray-caption {
+    font-size:10px;
+    margin-bottom:20px;
+  }
+  .tray-caption>span:last-child {
+    font-size:11px;
+  }
+  .chip-face small {
+    font-size:7px;
+  }
+  .chip-face>span {
+    font-size:15px;
+  }
+  .play-controls {
+    gap:11px;
+  }
+  .deal-button {
+    height:65px;
+    font-size:22px;
+  }
+  .bet-tools button {
+    height:39px;
+    font-size:13px;
+  }
+  .repeat-button {
+    font-size:12px;
+  }
+  .utility-actions button {
+    font-size:11px;
+  }
+  .utility-bar {
+    font-size:10px;
+  }
+}
+
+@media(max-height:850px) and (min-width:901px) {
+  .machine {
+    grid-template-rows:60px minmax(195px,29fr) minmax(270px,43fr) 193px;
+    min-height:718px;
+  }
+  .scoreboard {
+    padding-top:10px;
+    padding-bottom:9px;
+    gap:16px;
+  }
+  .score-row {
+    font-size:11px;
+  }
+  .score-heading {
+    padding-bottom:5px;
+  }
+  .score-total {
+    padding-top:5px;
+    margin-top:5px;
+  }
+  .score-row strong {
+    font-size:16px;
+  }
+  .stat-icon {
+    height:22px;
+  }
+  .road-caption {
+    height:17px;
+    font-size:8px;
+    padding-bottom:4px;
+  }
+  .pair-row {
+    height:46px;
+  }
+  .pair-zone {
+    font-size:13px;
+    gap:3px;
+  }
+  .bet-zone {
+    padding-top:15px;
+  }
+  .tie-zone {
+    padding-top:30px;
+  }
+  .zone-heading {
+    gap:5px;
+  }
+  .zone-heading strong {
+    font-size:22px;
+    padding:7px 2px 9px;
+  }
+  .hand {
+    height:61px;
+    margin-top:9px;
+  }
+  .payout {
+    font-size:12px;
+    bottom:13px;
+  }
+  .wager {
+    bottom:33px;
+    min-height:30px;
+  }
+  .wager-amount {
+    font-size:13px;
+  }
+  .mini-chip {
+    width:29px;
+    height:29px;
+  }
+  .chip-stack {
+    width:30px;
+    height:30px;
+  }
+  .mini-chip::after {
+    inset:5px;
+  }
+  .console {
+    grid-template-rows:1fr 34px;
+  }
+  .balance-panel {
+    padding-top:12px;
+    padding-bottom:10px;
+  }
+  .balance-amount {
+    font-size:31px;
+  }
+  .money-details {
+    margin-top:10px;
+  }
+  .chip-tray {
+    padding-top:10px;
+  }
+  .casino-chip {
+    width:87px;
+  }
+  .tray-caption {
+    margin-bottom:13px;
+  }
+  .play-controls {
+    padding-top:8px;
+    padding-bottom:6px;
+    gap:6px;
+  }
+  .deal-button {
+    height:46px;
+  }
+  .bet-tools button {
+    height:30px;
+  }
+  .repeat-button {
+    min-height:22px;
+    padding:3px;
+  }
+  .live-status {
+    font-size:20px;
+  }
+  .wordmark {
+    font-size:20px;
+  }
+  .brand-symbol {
+    font-size:34px;
+  }
+}
+
+@media(max-width:1100px) and (min-width:901px) {
+  .scoreboard {
+    grid-template-columns:175px 1fr;
+    padding-left:2%;
+    padding-right:2%;
+    gap:15px;
+  }
+  .score-totals {
+    padding-right:12px;
+  }
+  .score-row {
+    font-size:10px;
+    gap:6px;
+  }
+  .score-heading>span:last-child {
+    font-size:8px;
+  }
+  .header-meta {
+    gap:15px;
+  }
+  .virtual-tag {
+    display:none;
+  }
+  .felt {
+    padding-left:7%;
+    padding-right:7%;
+  }
+  .felt-side-note {
+    display:none;
+  }
+  .console {
+    grid-template-columns:27% 44% 29%;
+    padding:0 2%;
+  }
+  .casino-chip {
+    width:73px;
+  }
+  .chips {
+    gap:12px;
+  }
+  .chip-face strong {
+    font-size:12px;
+  }
+  .tray-caption {
+    letter-spacing:1px;
+  }
+  .balance-amount {
+    font-size:28px;
+  }
+  .money-details {
+    gap:17px;
+  }
+  .utility-actions {
+    gap:18px;
+  }
+  .hand-score {
+    right:3%;
+  }
+  .banker-zone .hand-score {
+    left:3%;
+  }
+}
+
+@media(max-width:900px) {
+  .machine {
+    height:auto;
+    min-height:100svh;
+    max-height:none;
+    grid-template-rows:64px 234px minmax(300px,40svh) auto;
+    overflow:hidden;
+  }
+  .machine-header {
+    padding:0 4%;
+  }
+  .wordmark {
+    font-size:18px;
+    letter-spacing:2px;
+    gap:8px;
+  }
+  .brand-symbol {
+    font-size:31px;
+  }
+  .wordmark small {
+    font-size:6px;
+    letter-spacing:2px;
+  }
+  .live-status {
+    font-size:16px;
+    letter-spacing:1px;
+    left:auto;
+    right:4%;
+    transform:none;
+  }
+  .header-meta {
+    display:none;
+  }
+  .scoreboard {
+    grid-template-columns:125px 1fr;
+    padding:14px 3%;
+    gap:12px;
+  }
+  .score-totals {
+    padding-right:10px;
+  }
+  .score-heading {
+    font-size:11px;
+    display:block;
+  }
+  .score-heading>span:last-child {
+    display:block;
+    margin-top:4px;
+    font-size:8px;
+  }
+  .score-row {
+    font-size:9px;
+    gap:5px;
+  }
+  .score-row strong {
+    font-size:14px;
+  }
+  .stat-icon {
+    width:23px;
+    height:21px;
+    font-size:9px;
+    flex-shrink:0;
+  }
+  .score-total {
+    font-size:10px;
+    gap:5px;
+    padding-top:6px;
+    margin-top:5px;
+  }
+  .score-total strong {
+    font-size:17px;
+  }
+  .round-unit {
+    display:none;
+  }
+  .roads {
+    gap:9px;
+    grid-template-rows:1.3fr 1fr;
+  }
+  .derived-roads {
+    gap:7px;
+  }
+  .road-caption {
+    font-size:7px;
+    letter-spacing:.6px;
+    height:19px;
+  }
+  .caption-ko,.road-legend,.road-type {
+    display:none;
+  }
+  .felt {
+    padding:5px 3% 30px;
+  }
+  .felt-side-note {
+    display:none;
+  }
+  .pair-row {
+    height:48px;
+  }
+  .pair-zone {
+    font-size:12px;
+    letter-spacing:1px;
+    gap:4px;
+  }
+  .pair-zone small {
+    font-size:8px;
+    letter-spacing:0;
+  }
+  .table-ornament {
+    font-size:21px;
+    letter-spacing:3px;
+  }
+  .bet-zone {
+    padding-top:17px;
+  }
+  .tie-zone {
+    padding-top:35px;
+  }
+  .zone-heading {
+    width:88%;
+    gap:5px;
+  }
+  .zone-heading strong {
+    font-size:22px;
+    letter-spacing:2px;
+    padding:9px 2px;
+  }
+  .zone-en {
+    font-size:8px;
+    letter-spacing:2px;
+  }
+  .hand {
+    height:64px;
+    gap:3px;
+    margin-top:16px;
+  }
+  .hand-score {
+    font-size:13px;
+    height:22px;
+    min-width:22px;
+    line-height:22px;
+    top:auto;
+    bottom:39px;
+    right:9%;
+  }
+  .banker-zone .hand-score {
+    left:9%;
+  }
+  .card-corner {
+    font-size:10px;
+    left:3px;
+    top:3px;
+  }
+  .card-corner.bottom {
+    right:3px;
+    bottom:3px;
+  }
+  .playing-card {
+    font-size:22px;
+  }
+  .wager {
+    bottom:39px;
+    gap:5px;
+  }
+  .wager-amount {
+    font-size:12px;
+    padding:4px 6px;
+  }
+  .chip-stack {
+    width:28px;
+    height:28px;
+  }
+  .mini-chip {
+    width:26px;
+    height:26px;
+  }
+  .mini-chip::after {
+    inset:5px;
+    font-size:9px;
+    border-width:1px;
+  }
+  .payout {
+    font-size:11px;
+    letter-spacing:1px;
+    bottom:13px;
+  }
+  .tie-emblem {
+    font-size:27px;
+    letter-spacing:2px;
+  }
+  .table-footnote {
+    font-size:8px;
+    bottom:9px;
+  }
+  .table-footnote>span:nth-child(2) {
+    display:none;
+  }
+  .console {
+    grid-template-columns:1fr 1fr;
+    grid-template-rows:auto auto 45px;
+    padding:0 4%;
+    border-top-width:2px;
+  }
+  .balance-panel {
+    padding:20px 0 14px;
+  }
+  .balance-label {
+    font-size:10px;
+    gap:10px;
+  }
+  .balance-amount {
+    font-size:31px;
+    margin-top:8px;
+  }
+  .money-details {
+    margin-top:13px;
+    gap:22px;
+  }
+  .money-details span {
+    font-size:9px;
+  }
+  .money-details strong {
+    font-size:13px;
+  }
+  .chip-tray {
+    grid-column:1/-1;
+    grid-row:2;
+    border:0;
+    border-top:1px solid #fff1;
+    padding:17px 0 23px;
+  }
+  .tray-caption {
+    margin-bottom:16px;
+  }
+  .chips {
+    justify-content:space-evenly;
+    gap:18px;
+  }
+  .casino-chip {
+    width:clamp(64px,12vw,95px);
+  }
+  .chip-face strong {
+    font-size:clamp(11px,1.9vw,17px);
+  }
+  .chip-face small {
+    font-size:5px;
+  }
+  .play-controls {
+    grid-column:2;
+    grid-row:1;
+    padding:15px 0 12px 13%;
+    gap:8px;
+  }
+  .bet-tools {
+    gap:5px;
+  }
+  .bet-tools button {
+    font-size:10px;
+    min-height:34px;
+  }
+  .deal-button {
+    height:47px;
+    font-size:17px;
+    padding:0 15px;
+  }
+  .repeat-button {
+    font-size:10px;
+    min-height:30px;
+  }
+  .utility-bar {
+    grid-row:3;
+  }
+  .utility-left {
+    font-size:8px;
+  }
+  .utility-separator,#round-label {
+    display:none;
+  }
+  .utility-actions {
+    gap:16px;
+  }
+  .utility-actions button {
+    font-size:10px;
+    min-height:40px;
+  }
+  .utility-actions button>span {
+    display:none;
+  }
+  #fullscreen-button {
+    display:none;
+  }
+  .toast {
+    bottom:25px;
+    font-size:12px;
+  }
+  .panel-dialog {
+    max-height:90svh;
+  }
+  .dialog-header {
+    padding:20px;
+  }
+  .dialog-body {
+    padding:20px;
+    max-height:calc(90svh - 100px);
+  }
+}
+
+@media(max-width:480px) {
+  .machine {
+    grid-template-rows:61px 216px 305px auto;
+  }
+  .wordmark {
+    font-size:15px;
+  }
+  .brand-symbol {
+    font-size:27px;
+  }
+  .wordmark small {
+    font-size:5px;
+    letter-spacing:1.8px;
+  }
+  .live-status {
+    font-size:14px;
+    gap:6px;
+  }
+  .status-dot {
+    width:5px;
+    height:5px;
+  }
+  .scoreboard {
+    grid-template-columns:105px 1fr;
+    gap:9px;
+    padding:12px 3%;
+  }
+  .score-totals {
+    padding-right:7px;
+  }
+  .score-row {
+    font-size:8px;
+    gap:4px;
+  }
+  .score-row strong {
+    font-size:13px;
+  }
+  .stat-icon {
+    width:21px;
+    height:20px;
+    font-size:8px;
+  }
+  .road-caption {
+    font-size:6px;
+    letter-spacing:.1px;
+  }
+  .derived-roads {
+    gap:5px;
+  }
+  .felt {
+    padding-left:2%;
+    padding-right:2%;
+  }
+  .zone-heading strong {
+    font-size:18px;
+    letter-spacing:1px;
+    padding:9px 0;
+  }
+  .zone-en {
+    font-size:7px;
+  }
+  .pair-zone {
+    font-size:10px;
+  }
+  .pair-zone small {
+    font-size:7px;
+  }
+  .pair-row {
+    height:43px;
+  }
+  .bet-zone {
+    padding-left:3px;
+    padding-right:3px;
+  }
+  .player-zone {
+    padding-left:12%;
+  }
+  .banker-zone {
+    padding-right:12%;
+  }
+  .zone-heading {
+    width:90%;
+  }
+  .hand {
+    height:51px;
+    margin-top:20px;
+    gap:2px;
+  }
+  .playing-card {
+    font-size:19px;
+  }
+  .card-corner {
+    font-size:8px;
+    left:2px;
+    top:2px;
+  }
+  .card-corner.bottom {
+    right:2px;
+    bottom:2px;
+  }
+  .hand-score {
+    bottom:71px;
+    right:16%;
+    font-size:12px;
+    min-width:19px;
+    height:19px;
+    line-height:19px;
+  }
+  .banker-zone .hand-score {
+    left:16%;
+  }
+  .wager {
+    gap:3px;
+    bottom:39px;
+  }
+  .wager-amount {
+    font-size:11px;
+    padding:4px;
+  }
+  .chip-stack {
+    width:22px;
+    height:24px;
+  }
+  .mini-chip {
+    height:23px;
+    width:23px;
+  }
+  .payout {
+    font-size:10px;
+    letter-spacing:0;
+  }
+  .betting-zones {
+    gap:3px;
+  }
+  .tie-emblem {
+    font-size:22px;
+  }
+  .balance-amount {
+    font-size:27px;
+  }
+  .balance-label {
+    font-size:9px;
+    gap:6px;
+  }
+  .bet-availability {
+    font-size:8px;
+    padding:3px 4px;
+  }
+  .money-details {
+    gap:13px;
+  }
+  .money-details strong {
+    font-size:12px;
+  }
+  .money-details span {
+    font-size:8px;
+  }
+  .play-controls {
+    padding-left:8%;
+  }
+  .bet-tools button {
+    font-size:8px;
+    min-height:34px;
+  }
+  .bet-tools button>span {
+    display:none;
+  }
+  .deal-button {
+    font-size:16px;
+  }
+  .repeat-button {
+    font-size:9px;
+  }
+  .utility-left {
+    max-width:77px;
+    font-size:7px;
+    gap:5px;
+  }
+  .utility-actions {
+    gap:12px;
+  }
+  .utility-actions button {
+    font-size:9px;
+  }
+  .form-row {
+    grid-template-columns:1fr;
+  }
+  .stats-grid {
+    gap:8px;
+  }
+  .stat-box {
+    padding:12px 9px;
+  }
+  .stat-box strong {
+    font-size:17px;
+  }
+  .stat-box span {
+    font-size:9px;
+  }
+  .dialog-body table {
+    font-size:10px;
+  }
+  .dialog-body td,.dialog-body th {
+    padding:10px 5px;
+  }
+  .casino-chip {
+    width:65px;
+  }
+  .chips {
+    gap:17px;
+  }
+  .chip-face strong {
+    font-size:11px;
+  }
+  .chip-face small {
+    font-size:4px;
+    letter-spacing:.3px;
+  }
+  .chip-face>span {
+    font-size:8px;
+  }
+  .chip-face {
+    inset:20%;
+    gap:2px;
+  }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after {
+    animation-duration:.001ms!important;
+    transition-duration:.001ms!important;
+    scroll-behavior:auto!important;
+  }
+}
+

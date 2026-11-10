@@ -1,0 +1,15 @@
+{
+  "name": "baccarat-table",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A reference-inspired electronic baccarat table with virtual credits, roads and simulation.",
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "start": "node scripts/serve.mjs",
+    "test": "node --test",
+    "build": "node scripts/build.mjs",
+    "check": "node --check src/app.js && node --check src/engine.js && node --check src/roads.js && node --check src/session.js"
+  },
+  "engines": { "node": ">=22" }
+}

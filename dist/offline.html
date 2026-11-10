@@ -1,0 +1,3180 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#103c32">
+  <meta name="description" content="실제 전자식 테이블에서 영감을 얻은 가상 바카라 시뮬레이터. 카드 애니메이션, 대로드, 통계와 시뮬레이션을 한 화면에서.">
+  <title>바카라 테이블 · BACCARAT TABLE</title>
+  <style>
+@charset "UTF-8";
+:root {
+  color-scheme:dark;
+  --felt:#124a3b;
+  --cream:#f2eee0;
+  --muted:#a9bcb2;
+  --gold:#ddc48e;
+  --red:#ee4947;
+  --blue:#3f9ff0;
+  --green:#82e14b;
+  --line:#dce7d8;
+  --panel:#252c2d;
+  font-family:"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;
+  font-synthesis:none;
+  font-weight:400;
+}
+
+* {
+  box-sizing:border-box;
+}
+
+body {
+  margin:0;
+  background:#0b211d;
+  color:var(--cream);
+}
+
+button,input,select {
+  font:inherit;
+}
+
+button {
+  cursor:pointer;
+  color:inherit;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+
+button:disabled {
+  cursor:default;
+}
+
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
+  outline:3px solid #f7df9e;
+  outline-offset:5px;
+}
+
+button {
+  border:0;
+}
+
+a {
+  color:inherit;
+}
+
+button,span {
+  -webkit-user-select:none;
+}
+
+button strong {
+  font-weight:800;
+}
+
+strong {
+  font-variant-numeric:tabular-nums;
+}
+
+svg {
+  display:block;
+}
+
+.machine {
+  height:100svh;
+  min-height:720px;
+  max-height:1440px;
+  max-width:2560px;
+  margin:auto;
+  display:grid;
+  grid-template-rows:76px minmax(215px,29fr) minmax(300px,43fr) minmax(206px,23fr);
+  overflow:hidden;
+  background:radial-gradient(ellipse at 50% 34%,#215b45 0%,#164735 55%,#103b30 100%);
+  position:relative;
+}
+
+.machine::before {
+  content:"";
+  pointer-events:none;
+  position:absolute;
+  inset:0;
+  z-index:0;
+  opacity:.12;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' opacity='.5' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.machine>* {
+  position:relative;
+}
+
+.machine-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 2.4%;
+  background:linear-gradient(#102f29ed,#12382e88);
+  border-bottom:1px solid #c9d4b524;
+  z-index:2;
+}
+
+.wordmark {
+  text-decoration:none;
+  display:flex;
+  align-items:center;
+  gap:13px;
+  font-family:Georgia,serif;
+  font-size:24px;
+  letter-spacing:3px;
+  color:var(--gold);
+}
+
+.wordmark small {
+  display:block;
+  margin-top:4px;
+  font-family:Arial,sans-serif;
+  letter-spacing:3.5px;
+  font-size:8px;
+  color:#b4c4b5;
+}
+
+.brand-symbol {
+  font-size:43px;
+  line-height:1;
+}
+
+.live-status {
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  font-size:23px;
+  font-weight:700;
+  letter-spacing:3px;
+  white-space:nowrap;
+}
+
+.live-status small {
+  display:none;
+}
+
+.status-dot,.connection-dot {
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#96d98e;
+  box-shadow:0 0 12px #83dca378;
+}
+
+.header-meta {
+  display:flex;
+  align-items:center;
+  gap:24px;
+  font-size:12px;
+  color:#c0cdc4;
+}
+
+.virtual-tag {
+  padding:6px 10px;
+  border:1px solid #bfcaaa3d;
+  border-radius:3px;
+  font-size:9px;
+  letter-spacing:1.8px;
+  color:#d7d8b9;
+}
+
+.table-id {
+  letter-spacing:2px;
+}
+
+.table-id b {
+  color:var(--gold);
+  margin-left:3px;
+}
+
+.icon-button {
+  width:32px;
+  height:32px;
+  background:transparent;
+  border:1px solid #d5dfce59;
+  border-radius:50%;
+  font-family:Georgia,serif;
+  font-size:18px;
+  color:#d5dfce;
+}
+
+.scoreboard {
+  display:grid;
+  grid-template-columns:minmax(190px,15.5%) 1fr;
+  gap:22px;
+  padding:19px 3% 13px;
+  z-index:1;
+}
+
+.score-totals {
+  display:flex;
+  flex-direction:column;
+  padding:0 18px 0 0;
+  border-right:1px solid #dce7d845;
+  min-height:0;
+}
+
+.score-heading {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:13px;
+  font-weight:700;
+  padding:2px 0 10px;
+}
+
+.score-heading>span:last-child {
+  font:10px Arial,sans-serif;
+  letter-spacing:1px;
+  color:#b8cbb7;
+}
+
+.score-row {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex:1;
+  font-size:12px;
+  min-height:24px;
+}
+
+.score-row strong {
+  margin-left:auto;
+  font-size:19px;
+  font-weight:500;
+}
+
+.stat-icon {
+  width:30px;
+  height:25px;
+  border-radius:3px;
+  display:grid;
+  place-items:center;
+  font:bold 12px Arial,sans-serif;
+  color:white;
+}
+
+.player-stat {
+  background:#3189cc;
+}
+
+.banker-stat {
+  background:#ca4e4d;
+}
+
+.tie-stat {
+  background:#408950;
+}
+
+.player-pair-stat {
+  background:#c97599;
+}
+
+.banker-pair-stat {
+  background:#946cae;
+}
+
+.score-total {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  border-top:1px solid #dce7d838;
+  margin-top:8px;
+  padding:9px 0 0;
+  font-size:12px;
+}
+
+.score-total strong {
+  margin-left:auto;
+  font-size:20px;
+  font-weight:600;
+}
+
+.round-unit {
+  font-size:8px;
+  letter-spacing:1px;
+  color:#a9bda9;
+}
+
+.roads {
+  min-width:0;
+  display:grid;
+  grid-template-rows:minmax(0,1.4fr) minmax(0,1fr);
+  gap:11px;
+}
+
+.road-panel {
+  min-height:0;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+}
+
+.road-caption {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 2px 6px;
+  font-size:9px;
+  letter-spacing:1.5px;
+  color:#c0d0be;
+  font-weight:600;
+  height:21px;
+  flex-shrink:0;
+}
+
+.caption-ko {
+  font-size:9px;
+  letter-spacing:0;
+  font-weight:400;
+  margin-left:7px;
+  color:#92b19d;
+}
+
+.road-legend {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:9px;
+  font-weight:400;
+  letter-spacing:0;
+}
+
+.legend-ring {
+  width:9px;
+  height:9px;
+  border:2px solid;
+  border-radius:50%;
+  margin-left:9px;
+}
+
+.legend-ring.blue {
+  color:#367ecb;
+}
+
+.legend-ring.red {
+  color:#d45256;
+}
+
+.legend-tie {
+  width:10px;
+  height:2px;
+  transform:rotate(-45deg);
+  background:#66bf7a;
+  margin-left:9px;
+}
+
+.road-grid {
+  --cell:20px;
+  position:relative;
+  flex:1;
+  min-height:0;
+  background-color:#f6f4e9;
+  background-image:linear-gradient(to right,#526b6a33 1px,transparent 1px),linear-gradient(to bottom,#526b6a33 1px,transparent 1px);
+  background-size:var(--cell) var(--cell);
+  border:1px solid #cbd4c0;
+  box-shadow:0 3px 6px #04170e40;
+  border-radius:2px;
+  overflow:hidden;
+  color:#1e322b;
+}
+
+.derived-roads {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:15px;
+}
+
+.road-type {
+  font-size:12px;
+  color:#bfcebe;
+}
+
+.road-mark {
+  position:absolute;
+  left:calc(var(--column)*var(--cell));
+  top:calc(var(--row)*var(--cell));
+  width:var(--cell);
+  height:var(--cell);
+  display:grid;
+  place-items:center;
+}
+
+.road-mark::before {
+  content:"";
+  width:65%;
+  height:65%;
+  border:2px solid currentColor;
+  border-radius:50%;
+}
+
+.road-mark.player,.road-mark.blue {
+  color:#347cc9;
+}
+
+.road-mark.banker,.road-mark.red {
+  color:#d94a4f;
+}
+
+.road-mark.tie {
+  color:#3e9b57;
+}
+
+.road-mark.tie::before {
+  border-color:transparent;
+}
+
+.road-mark.with-tie::after {
+  content:"";
+  position:absolute;
+  left:20%;
+  top:48%;
+  width:64%;
+  height:2px;
+  background:#3a9b55;
+  transform:rotate(-47deg);
+}
+
+.tie-count {
+  position:absolute;
+  font:700 8px Arial;
+  color:#206b36;
+  right:1px;
+  bottom:0;
+  z-index:2;
+}
+
+.pair-dot {
+  position:absolute;
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  border:1px solid #f5f4eb;
+  z-index:2;
+}
+
+.pair-dot.pp {
+  top:1px;
+  left:1px;
+  background:#d16199;
+}
+
+.pair-dot.bp {
+  bottom:1px;
+  right:1px;
+  background:#9163b4;
+}
+
+.road-mark.solid::before {
+  width:59%;
+  height:59%;
+  background:currentColor;
+  border:0;
+}
+
+.road-mark.slash::before {
+  width:70%;
+  height:2px;
+  border:0;
+  background:currentColor;
+  transform:rotate(-50deg);
+  border-radius:0;
+}
+
+.felt {
+  min-height:0;
+  padding:12px 10.6% 34px;
+  isolation:isolate;
+}
+
+.table-lines {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:-1;
+  pointer-events:none;
+  fill:none;
+  stroke:#e6e7d5;
+  stroke-width:2;
+  opacity:.8;
+}
+
+.table-lines path:nth-child(2) {
+  opacity:.35;
+  stroke-width:1;
+}
+
+.felt-side-note {
+  position:absolute;
+  top:37%;
+  width:9%;
+  display:flex;
+  align-items:center;
+  flex-direction:column;
+  color:#c6d4bb70;
+}
+
+.left-note {
+  left:.8%;
+}
+
+.right-note {
+  right:.8%;
+}
+
+.felt-side-note>span {
+  font:55px Georgia,serif;
+  line-height:1;
+}
+
+.felt-side-note b {
+  font:12px Georgia,serif;
+  letter-spacing:2px;
+  margin-top:12px;
+}
+
+.felt-side-note small {
+  font:6px Arial;
+  letter-spacing:1.6px;
+  margin-top:7px;
+  white-space:nowrap;
+}
+
+.table-center {
+  height:100%;
+  display:flex;
+  flex-direction:column;
+}
+
+.pair-row {
+  height:65px;
+  flex-shrink:0;
+  display:grid;
+  grid-template-columns:1fr .83fr 1fr;
+  gap:9px;
+  padding:0 3%;
+}
+
+.pair-zone {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  background:transparent;
+  border:1px solid #cddcc156;
+  border-top:0;
+  border-bottom:0;
+  transform:skewX(-9deg);
+  color:#d2dbc5b3;
+  font-size:16px;
+  letter-spacing:2px;
+}
+
+.banker-pair {
+  transform:skewX(9deg);
+}
+
+.pair-zone>* {
+  transform:skewX(9deg);
+}
+
+.banker-pair>* {
+  transform:skewX(-9deg);
+}
+
+.pair-zone small {
+  font-size:9px;
+  letter-spacing:1px;
+  opacity:.65;
+}
+
+.table-ornament {
+  display:grid;
+  place-items:center;
+  color:#c4d8b98a;
+  font:29px Georgia;
+  letter-spacing:8px;
+}
+
+.betting-zones {
+  display:grid;
+  grid-template-columns:1fr .83fr 1fr;
+  gap:5px;
+  flex:1;
+  min-height:0;
+}
+
+.bet-zone {
+  --accent:var(--red);
+  position:relative;
+  background:transparent;
+  isolation:isolate;
+  display:flex;
+  align-items:center;
+  flex-direction:column;
+  min-width:0;
+  padding:24px 10px 15px;
+  transition:filter .2s;
+  overflow:visible;
+}
+
+.zone-surface {
+  position:absolute;
+  inset:0;
+  background:var(--accent);
+  z-index:-2;
+  clip-path:polygon(13% 0,100% 0,92% 100%,0 94%);
+  filter:none;
+}
+
+.zone-surface::before {
+  content:"";
+  position:absolute;
+  inset:3px;
+  background:radial-gradient(ellipse at 50% 0,#204d39,#133b2d 80%);
+  clip-path:polygon(13% 0,100% 0,92% 100%,0 94%);
+}
+
+.player-zone {
+  padding-left:12%;
+}
+
+.banker-zone {
+  --accent:var(--blue);
+  padding-right:12%;
+}
+
+.banker-zone .zone-surface,.banker-zone .zone-surface::before {
+  clip-path:polygon(0 0,87% 0,100% 94%,8% 100%);
+}
+
+.tie-zone {
+  --accent:var(--green);
+  padding-top:40px;
+}
+
+.tie-zone .zone-surface,.tie-zone .zone-surface::before {
+  clip-path:polygon(5% 14%,95% 14%,100% 100%,0 100%);
+}
+
+.tie-zone .zone-surface::before {
+  background:radial-gradient(ellipse at 50% 0,#2b5034,#173e2c 80%);
+}
+
+.bet-zone:not(:disabled):hover {
+  filter:brightness(1.16);
+}
+
+.bet-zone:active:not(:disabled) {
+  filter:brightness(1.3);
+}
+
+.zone-heading {
+  width:80%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:7px;
+  position:relative;
+  z-index:1;
+}
+
+.zone-en {
+  font:10px Arial;
+  letter-spacing:4px;
+  color:#f1efdbb5;
+}
+
+.zone-heading strong {
+  display:block;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 85%,white),var(--accent));
+  width:100%;
+  padding:10px 4px 12px;
+  border-radius:3px;
+  box-shadow:inset 0 1px #ffffff40,0 4px 10px #05170e30;
+  font-size:clamp(19px,1.7vw,32px);
+  line-height:1.1;
+  letter-spacing:5px;
+  color:#fff;
+  text-shadow:0 1px 2px #0003;
+}
+
+.tie-zone .zone-heading strong {
+  color:#f8fff5;
+  background:linear-gradient(#7ad946,#58bc34);
+  text-shadow:0 1px 3px #26581a99;
+}
+
+.hand {
+  height:clamp(59px,8.8vh,105px);
+  display:flex;
+  gap:6px;
+  align-items:center;
+  justify-content:center;
+  margin-top:15px;
+  min-width:0;
+  width:100%;
+  pointer-events:none;
+}
+
+.playing-card {
+  height:100%;
+  aspect-ratio:.7;
+  background:#faf8f0;
+  color:#1d2931;
+  border-radius:4px;
+  border:1px solid #c6cbbd;
+  box-shadow:0 3px 6px #041e1e50;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font:clamp(18px,2.2vw,36px) Georgia;
+  transform-origin:center;
+  animation:deal-in .36s ease-out both;
+}
+
+.playing-card.red-suit {
+  color:#c54145;
+}
+
+.card-corner {
+  position:absolute;
+  left:5px;
+  top:4px;
+  font:bold clamp(10px,.85vw,16px) Georgia;
+  display:flex;
+  flex-direction:column;
+  line-height:1.1;
+}
+
+.card-corner.bottom {
+  left:auto;
+  top:auto;
+  right:5px;
+  bottom:4px;
+  transform:rotate(180deg);
+}
+
+.card-center {
+  font-size:1.15em;
+}
+
+.hand-score {
+  position:absolute;
+  right:9%;
+  top:44%;
+  font-size:20px;
+  color:var(--cream);
+  font-weight:700;
+  background:#041e1bd1;
+  min-width:28px;
+  height:28px;
+  line-height:28px;
+  border-radius:50%;
+  box-shadow:0 0 0 1px #e7e7d363;
+}
+
+.hand-score:empty {
+  display:none;
+}
+
+.banker-zone .hand-score {
+  right:auto;
+  left:9%;
+}
+
+.wager {
+  min-height:40px;
+  position:absolute;
+  bottom:44px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+
+.wager-amount {
+  font-size:16px;
+  background:#09271fc9;
+  padding:5px 10px;
+  border-radius:3px;
+  box-shadow:0 0 0 1px #d4dcca22;
+}
+
+.chip-stack {
+  position:relative;
+  width:39px;
+  height:39px;
+  display:block;
+  animation:chip-in .22s ease-out;
+}
+
+.mini-chip {
+  position:absolute;
+  left:0;
+  bottom:calc(var(--stack)*4px);
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:repeating-conic-gradient(var(--chip-pattern) 0 13deg,var(--chip-base) 13deg 45deg);
+  box-shadow:0 2px 0 color-mix(in srgb,var(--chip-base),black 50%),0 3px 3px #0006;
+  border:1px solid #ffffff50;
+}
+
+.mini-chip::after {
+  content:"♠";
+  position:absolute;
+  inset:7px;
+  background:#eeeade;
+  border-radius:50%;
+  border:2px solid var(--chip-base);
+  display:grid;
+  place-items:center;
+  color:#28343a;
+  font-size:12px;
+}
+
+.payout {
+  margin-top:auto;
+  font-size:14px;
+  letter-spacing:2px;
+  position:absolute;
+  bottom:16px;
+  color:#e1e7d8;
+}
+
+.tie-emblem {
+  font:38px Georgia;
+  color:#9bc18b24;
+  letter-spacing:5px;
+  margin:auto;
+  position:absolute;
+  top:54%;
+  pointer-events:none;
+}
+
+.winner-tag {
+  position:absolute;
+  top:-12px;
+  background:var(--gold);
+  color:#173b29;
+  font:700 9px Arial;
+  letter-spacing:2px;
+  padding:5px 12px;
+  border-radius:2px;
+  opacity:0;
+  visibility:hidden;
+  transform:translateY(5px);
+  transition:.2s;
+}
+
+.bet-zone.winning {
+  filter:brightness(1.15);
+  animation:winner-glow 1s ease-in-out 2;
+}
+
+.winning .zone-surface {
+  background:#f2da9f;
+}
+
+.winning .winner-tag {
+  opacity:1;
+  visibility:visible;
+  transform:translateY(0);
+}
+
+.table-footnote {
+  position:absolute;
+  bottom:9px;
+  left:3%;
+  right:3%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-size:9px;
+  color:#b6c9ae87;
+  letter-spacing:.5px;
+}
+
+.table-footnote>span:nth-child(2) {
+  font-size:8px;
+  letter-spacing:2px;
+}
+
+.console {
+  background:linear-gradient(110deg,#242c2d,#343b3b 53%,#252d2e);
+  display:grid;
+  grid-template-columns:28% 43% 29%;
+  grid-template-rows:1fr 39px;
+  border-top:3px solid #bdc6bb;
+  box-shadow:0 -7px 0 #122e26,0 -9px 0 #ffffff27,0 -12px 25px #08251b55;
+  z-index:2;
+  padding:0 3%;
+  position:relative;
+}
+
+.balance-panel {
+  padding:22px 7% 15px 0;
+  align-self:center;
+}
+
+.balance-label {
+  display:flex;
+  gap:16px;
+  align-items:center;
+  font-size:11px;
+  color:#b9c4bd;
+  letter-spacing:.2px;
+}
+
+.bet-availability {
+  font-size:9px;
+  color:#b5d6ab;
+  padding:3px 7px;
+  border:1px solid #a4c99a38;
+  border-radius:3px;
+}
+
+.balance-amount {
+  font:500 clamp(25px,2.45vw,47px) Arial,sans-serif;
+  letter-spacing:-1.6px;
+  display:block;
+  margin-top:9px;
+  color:#fffaf0;
+  text-shadow:0 1px 10px #fff1;
+}
+
+.money-details {
+  display:flex;
+  gap:25px;
+  margin-top:14px;
+}
+
+.money-details>div {
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+
+.money-details span {
+  font-size:10px;
+  color:#a3b0a9;
+}
+
+.money-details strong {
+  font:500 15px Arial;
+  color:#ebe9db;
+}
+
+.money-details strong.positive,.positive {
+  color:#9eddb0!important;
+}
+
+.money-details strong.negative,.negative {
+  color:#f59b94!important;
+}
+
+.chip-tray {
+  border-left:1px solid #dce7d814;
+  border-right:1px solid #dce7d814;
+  padding:16px 5% 12px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.tray-caption {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font:8px Arial;
+  letter-spacing:2px;
+  color:#9da9a3;
+  margin-bottom:16px;
+}
+
+.tray-caption>span:last-child {
+  font-family:inherit;
+  font-size:10px;
+  letter-spacing:.4px;
+  color:#c9c4ae;
+}
+
+.chips {
+  display:flex;
+  justify-content:space-around;
+  align-items:center;
+  gap:15px;
+}
+
+.casino-chip {
+  --chip-base:#2458d9;
+  --chip-pattern:#ef6454;
+  position:relative;
+  flex-shrink:0;
+  width:clamp(72px,7.15vw,138px);
+  aspect-ratio:1;
+  border-radius:50%;
+  background:repeating-conic-gradient(from -6deg,var(--chip-pattern) 0 13deg,var(--chip-base) 13deg 45deg);
+  padding:0;
+  border:2px solid #ffffff38;
+  box-shadow:0 3px 0 color-mix(in srgb,var(--chip-base),black 30%),0 6px 0 color-mix(in srgb,var(--chip-base),black 55%),0 9px 12px #0c1219a0,inset 0 0 0 3px #0001;
+  transition:transform .18s,outline-color .18s;
+  isolation:isolate;
+}
+
+.casino-chip::before {
+  content:"";
+  position:absolute;
+  inset:8%;
+  border-radius:50%;
+  background:var(--chip-base);
+  border:1px dashed #ffffff69;
+  box-shadow:inset 0 0 6px #0008;
+  z-index:-1;
+}
+
+.chip-face {
+  position:absolute;
+  inset:21%;
+  border-radius:50%;
+  background:radial-gradient(circle at 35% 28%,#fffdf5,#d6d8d2);
+  border:2px solid #c5c6c3;
+  box-shadow:0 0 0 4px #1921299c,inset 0 2px 4px #fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  color:#2b3032;
+  gap:3px;
+}
+
+.chip-face small {
+  font:5px Arial;
+  letter-spacing:.7px;
+  color:#5e6561;
+}
+
+.chip-face strong {
+  font:bold clamp(11px,1.2vw,22px) Georgia,serif;
+  letter-spacing:-.6px;
+}
+
+.chip-face>span {
+  font:11px Georgia;
+  color:#767870;
+}
+
+.chip-1000 {
+  --chip-base:#2458d9;
+  --chip-pattern:#ef6454;
+}
+
+.chip-5000 {
+  --chip-base:#274cdb;
+  --chip-pattern:#f4f1de;
+}
+
+.chip-10000 {
+  --chip-base:#262c30;
+  --chip-pattern:#edda47;
+}
+
+.chip-100000 {
+  --chip-base:#e98529;
+  --chip-pattern:#252a29;
+}
+
+.casino-chip.selected {
+  outline:2px solid var(--gold);
+  outline-offset:6px;
+  transform:translateY(-3px) scale(1.04);
+}
+
+.casino-chip:hover {
+  transform:translateY(-5px);
+}
+
+.casino-chip.selected::after {
+  content:"";
+  position:absolute;
+  bottom:-18px;
+  left:calc(50% - 3px);
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:var(--gold);
+}
+
+.play-controls {
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:15px 0 12px 9%;
+  gap:9px;
+}
+
+.bet-tools {
+  display:flex;
+  gap:7px;
+}
+
+.bet-tools button {
+  height:34px;
+  background:#1c2425;
+  border:1px solid #b0bcb329;
+  border-radius:4px;
+  font-size:11px;
+  flex:1;
+  white-space:nowrap;
+}
+
+.bet-tools button:first-child {
+  flex:1.4;
+}
+
+.bet-tools button:last-child {
+  flex:.6;
+  font-size:15px;
+}
+
+.bet-tools button span {
+  font-size:17px;
+  vertical-align:-1px;
+  margin-right:3px;
+}
+
+.bet-tools button:disabled,.repeat-button:disabled {
+  opacity:.35;
+}
+
+.deal-button {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:linear-gradient(#e9d5a4,#c7ad77);
+  height:57px;
+  border-radius:4px;
+  padding:0 24px;
+  color:#24372b;
+  font-size:19px;
+  letter-spacing:2px;
+  font-weight:800;
+  box-shadow:0 3px 0 #8a7753,inset 0 1px 0 #fff9;
+}
+
+.deal-button>span:last-child {
+  font-size:27px;
+  font-weight:400;
+}
+
+.deal-button:disabled {
+  filter:saturate(.4);
+  opacity:.45;
+  box-shadow:none;
+}
+
+.deal-button:hover:not(:disabled) {
+  filter:brightness(1.1);
+}
+
+.repeat-button {
+  background:transparent;
+  font-size:11px;
+  letter-spacing:.4px;
+  color:#bdc7bf;
+  padding:6px;
+  min-height:25px;
+}
+
+.repeat-button>span {
+  font-size:16px;
+  vertical-align:-1px;
+  margin-right:5px;
+}
+
+.utility-bar {
+  grid-column:1/-1;
+  border-top:1px solid #d6e0d115;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-size:9px;
+  color:#9ba9a1;
+}
+
+.utility-left {
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+
+.connection-dot {
+  height:5px;
+  width:5px;
+  box-shadow:none;
+  background:#91ba8f;
+}
+
+.utility-separator {
+  margin:0 9px;
+  opacity:.4;
+}
+
+.utility-actions {
+  display:flex;
+  align-items:center;
+  gap:25px;
+}
+
+.utility-actions button {
+  background:transparent;
+  color:#bac4bd;
+  font-size:10px;
+  padding:7px 0;
+  min-height:32px;
+}
+
+.utility-actions button>span {
+  font-size:14px;
+  margin-right:6px;
+  vertical-align:-1px;
+  color:#b8bca5;
+}
+
+#fullscreen-button {
+  font-size:20px;
+  margin-left:3px;
+}
+
+.utility-actions button:hover,.repeat-button:hover:not(:disabled) {
+  color:#f4e3b8;
+}
+
+.toast {
+  position:fixed;
+  left:50%;
+  bottom:230px;
+  transform:translate(-50%,10px);
+  padding:12px 21px;
+  background:#132b26f5;
+  border:1px solid #d7c18c88;
+  border-radius:6px;
+  box-shadow:0 6px 24px #0005;
+  color:#f6edd7;
+  font-size:13px;
+  z-index:20;
+  opacity:0;
+  pointer-events:none;
+  transition:.2s;
+  max-width:90vw;
+  text-align:center;
+}
+
+.toast.visible {
+  opacity:1;
+  transform:translate(-50%,0);
+}
+
+.panel-dialog {
+  color:#e7eee3;
+  border:1px solid #9caf9d60;
+  border-radius:12px;
+  padding:0;
+  width:min(800px,94vw);
+  max-height:87svh;
+  background:#152e27;
+  box-shadow:0 30px 120px #0009;
+}
+
+.panel-dialog::backdrop {
+  background:#051811c9;
+  backdrop-filter:blur(5px);
+}
+
+.dialog-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:26px 30px 21px;
+  border-bottom:1px solid #bfcbb628;
+}
+
+.eyebrow {
+  font:10px Arial;
+  color:var(--gold);
+  letter-spacing:2px;
+}
+
+h1 {
+  font-size:24px;
+  margin:7px 0 0;
+  letter-spacing:-.5px;
+}
+
+.close-button {
+  background:#ffffff0a;
+  border:1px solid #fff2;
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  font-size:26px;
+  font-weight:200;
+  color:#b8c7b9;
+}
+
+.dialog-body {
+  padding:25px 30px 30px;
+  overflow:auto;
+  max-height:calc(87svh - 110px);
+  font-size:13px;
+  line-height:1.8;
+}
+
+.dialog-body h2 {
+  font-size:15px;
+  color:#e1c893;
+  margin:22px 0 9px;
+}
+
+.dialog-body p {
+  color:#b6c7b9;
+  margin-top:0;
+}
+
+.dialog-body .note {
+  font-size:11px;
+  color:#9cb2a3;
+  margin-top:15px;
+}
+
+.dialog-body a {
+  color:#dec891;
+}
+
+.dialog-body ul {
+  padding-left:20px;
+  color:#b6c7b9;
+}
+
+.dialog-body table {
+  width:100%;
+  border-collapse:collapse;
+  font-size:12px;
+}
+
+.dialog-body th {
+  text-align:left;
+  color:#8fa999;
+  font-size:10px;
+  font-weight:400;
+  white-space:nowrap;
+}
+
+.dialog-body td,.dialog-body th {
+  padding:11px 9px;
+  border-bottom:1px solid #aebca51c;
+}
+
+.dialog-body td {
+  white-space:nowrap;
+}
+
+.dialog-body .table-wrap {
+  overflow-x:auto;
+}
+
+.dialog-toolbar {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:17px;
+}
+
+.secondary-button,.primary-button {
+  min-height:42px;
+  border-radius:4px;
+  padding:9px 16px;
+  font-size:12px;
+  background:#254337;
+  border:1px solid #bdd0b233;
+  color:#dae5d5;
+}
+
+.primary-button {
+  background:var(--gold);
+  color:#203b2b;
+  font-weight:700;
+}
+
+.primary-button:disabled,.secondary-button:disabled {
+  opacity:.4;
+}
+
+.empty-state {
+  text-align:center;
+  padding:45px 0;
+  color:#9fb2a3;
+}
+
+.empty-state strong {
+  display:block;
+  font-size:18px;
+  color:#d9e5d3;
+  margin-bottom:10px;
+}
+
+.stats-grid {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  margin:20px 0;
+}
+
+.stat-box {
+  border:1px solid #d4dcc124;
+  border-radius:5px;
+  padding:17px;
+}
+
+.stat-box span {
+  font-size:11px;
+  color:#a4b8a8;
+  display:block;
+}
+
+.stat-box strong {
+  font:500 23px Arial;
+  display:block;
+  margin-top:7px;
+  color:#efe7d3;
+}
+
+.distribution {
+  display:flex;
+  height:12px;
+  border-radius:3px;
+  overflow:hidden;
+  margin:20px 0 10px;
+  background:#ffffff0c;
+}
+
+.distribution>span {
+  min-width:0;
+}
+
+.distribution-labels {
+  display:flex;
+  justify-content:space-between;
+  font-size:11px;
+  color:#acbfaf;
+}
+
+.form-row {
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:15px;
+  margin:20px 0;
+}
+
+.form-row label {
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  color:#aabdac;
+  font-size:11px;
+}
+
+select,input[type=number] {
+  min-width:0;
+  width:100%;
+  background:#0d251f;
+  border:1px solid #a8bba54d;
+  border-radius:4px;
+  padding:11px 12px;
+  color:#e6e9da;
+  min-height:45px;
+  font-size:13px;
+}
+
+.form-actions {
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+progress {
+  width:100%;
+  height:9px;
+  accent-color:var(--gold);
+  margin-top:22px;
+}
+
+.sim-chart {
+  width:100%;
+  height:160px;
+  background:#0d251f;
+  border:1px solid #9db79433;
+  border-radius:4px;
+  margin-top:18px;
+}
+
+.setting-row {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:17px 0;
+  border-bottom:1px solid #bfc9ae26;
+  gap:20px;
+}
+
+.setting-row small {
+  display:block;
+  color:#91ac99;
+  font-size:11px;
+  margin-top:4px;
+}
+
+.setting-row input {
+  accent-color:var(--gold);
+  width:20px;
+  height:20px;
+}
+
+.danger-button {
+  background:#713b32;
+  color:#ffe2da;
+  border:1px solid #b5655455;
+  padding:10px 15px;
+  border-radius:4px;
+  min-height:42px;
+}
+
+.result-pill {
+  padding:3px 8px;
+  border-radius:3px;
+  font-size:10px;
+  background:#2a4d3b;
+  color:#cde5bd;
+}
+
+.result-pill.player {
+  background:#274965;
+  color:#a3d4ff;
+}
+
+.result-pill.banker {
+  background:#673c3b;
+  color:#ffb4b3;
+}
+
+.result-pill.tie {
+  background:#305737;
+  color:#b1e5ac;
+}
+
+.chart-labels {
+  display:flex;
+  justify-content:space-between;
+  font:10px Arial;
+  color:#93ab9a;
+}
+
+.mobile-only {
+  display:none;
+}
+
+@keyframes deal-in {
+  from {
+    opacity:0;
+    transform:translate(25px,-30px) rotateY(90deg) rotate(8deg);
+  }
+  to {
+    opacity:1;
+    transform:translate(0,0) rotateY(0) rotate(0);
+  }
+}
+
+@keyframes chip-in {
+  from {
+    transform:translateY(-18px) scale(.85);
+    opacity:0;
+  }
+  to {
+    transform:translateY(0);
+    opacity:1;
+  }
+}
+
+@keyframes winner-glow {
+  50% {
+    filter:brightness(1.5);
+  }
+}
+
+@media(min-width:1700px) {
+  .machine-header {
+    padding:0 3%;
+  }
+  .machine {
+    grid-template-rows:86px minmax(240px,29fr) minmax(360px,43fr) minmax(240px,23fr);
+  }
+  .scoreboard {
+    gap:28px;
+    padding-top:23px;
+    padding-bottom:17px;
+  }
+  .score-row {
+    font-size:14px;
+    gap:14px;
+  }
+  .score-row strong {
+    font-size:23px;
+  }
+  .stat-icon {
+    width:37px;
+    height:30px;
+    font-size:13px;
+  }
+  .score-heading {
+    font-size:15px;
+  }
+  .score-heading>span:last-child {
+    font-size:11px;
+  }
+  .road-caption {
+    font-size:10px;
+    height:24px;
+  }
+  .caption-ko,.road-legend {
+    font-size:10px;
+  }
+  .pair-row {
+    height:78px;
+  }
+  .pair-zone {
+    font-size:19px;
+  }
+  .pair-zone small {
+    font-size:11px;
+  }
+  .bet-zone {
+    padding-top:29px;
+  }
+  .tie-zone {
+    padding-top:49px;
+  }
+  .zone-heading {
+    gap:10px;
+  }
+  .zone-heading strong {
+    padding:13px 4px 15px;
+  }
+  .zone-en {
+    font-size:11px;
+  }
+  .hand {
+    margin-top:20px;
+  }
+  .wager {
+    bottom:48px;
+  }
+  .wager-amount {
+    font-size:18px;
+  }
+  .payout {
+    font-size:17px;
+    bottom:18px;
+  }
+  .table-footnote {
+    font-size:10px;
+    bottom:8px;
+  }
+  .balance-label {
+    font-size:13px;
+  }
+  .bet-availability {
+    font-size:10px;
+  }
+  .money-details {
+    gap:40px;
+    margin-top:18px;
+  }
+  .money-details span {
+    font-size:11px;
+  }
+  .money-details strong {
+    font-size:18px;
+  }
+  .tray-caption {
+    font-size:10px;
+    margin-bottom:20px;
+  }
+  .tray-caption>span:last-child {
+    font-size:11px;
+  }
+  .chip-face small {
+    font-size:7px;
+  }
+  .chip-face>span {
+    font-size:15px;
+  }
+  .play-controls {
+    gap:11px;
+  }
+  .deal-button {
+    height:65px;
+    font-size:22px;
+  }
+  .bet-tools button {
+    height:39px;
+    font-size:13px;
+  }
+  .repeat-button {
+    font-size:12px;
+  }
+  .utility-actions button {
+    font-size:11px;
+  }
+  .utility-bar {
+    font-size:10px;
+  }
+}
+
+@media(max-height:850px) and (min-width:901px) {
+  .machine {
+    grid-template-rows:60px minmax(195px,29fr) minmax(270px,43fr) 193px;
+    min-height:718px;
+  }
+  .scoreboard {
+    padding-top:10px;
+    padding-bottom:9px;
+    gap:16px;
+  }
+  .score-row {
+    font-size:11px;
+  }
+  .score-heading {
+    padding-bottom:5px;
+  }
+  .score-total {
+    padding-top:5px;
+    margin-top:5px;
+  }
+  .score-row strong {
+    font-size:16px;
+  }
+  .stat-icon {
+    height:22px;
+  }
+  .road-caption {
+    height:17px;
+    font-size:8px;
+    padding-bottom:4px;
+  }
+  .pair-row {
+    height:46px;
+  }
+  .pair-zone {
+    font-size:13px;
+    gap:3px;
+  }
+  .bet-zone {
+    padding-top:15px;
+  }
+  .tie-zone {
+    padding-top:30px;
+  }
+  .zone-heading {
+    gap:5px;
+  }
+  .zone-heading strong {
+    font-size:22px;
+    padding:7px 2px 9px;
+  }
+  .hand {
+    height:61px;
+    margin-top:9px;
+  }
+  .payout {
+    font-size:12px;
+    bottom:13px;
+  }
+  .wager {
+    bottom:33px;
+    min-height:30px;
+  }
+  .wager-amount {
+    font-size:13px;
+  }
+  .mini-chip {
+    width:29px;
+    height:29px;
+  }
+  .chip-stack {
+    width:30px;
+    height:30px;
+  }
+  .mini-chip::after {
+    inset:5px;
+  }
+  .console {
+    grid-template-rows:1fr 34px;
+  }
+  .balance-panel {
+    padding-top:12px;
+    padding-bottom:10px;
+  }
+  .balance-amount {
+    font-size:31px;
+  }
+  .money-details {
+    margin-top:10px;
+  }
+  .chip-tray {
+    padding-top:10px;
+  }
+  .casino-chip {
+    width:87px;
+  }
+  .tray-caption {
+    margin-bottom:13px;
+  }
+  .play-controls {
+    padding-top:8px;
+    padding-bottom:6px;
+    gap:6px;
+  }
+  .deal-button {
+    height:46px;
+  }
+  .bet-tools button {
+    height:30px;
+  }
+  .repeat-button {
+    min-height:22px;
+    padding:3px;
+  }
+  .live-status {
+    font-size:20px;
+  }
+  .wordmark {
+    font-size:20px;
+  }
+  .brand-symbol {
+    font-size:34px;
+  }
+}
+
+@media(max-width:1100px) and (min-width:901px) {
+  .scoreboard {
+    grid-template-columns:175px 1fr;
+    padding-left:2%;
+    padding-right:2%;
+    gap:15px;
+  }
+  .score-totals {
+    padding-right:12px;
+  }
+  .score-row {
+    font-size:10px;
+    gap:6px;
+  }
+  .score-heading>span:last-child {
+    font-size:8px;
+  }
+  .header-meta {
+    gap:15px;
+  }
+  .virtual-tag {
+    display:none;
+  }
+  .felt {
+    padding-left:7%;
+    padding-right:7%;
+  }
+  .felt-side-note {
+    display:none;
+  }
+  .console {
+    grid-template-columns:27% 44% 29%;
+    padding:0 2%;
+  }
+  .casino-chip {
+    width:73px;
+  }
+  .chips {
+    gap:12px;
+  }
+  .chip-face strong {
+    font-size:12px;
+  }
+  .tray-caption {
+    letter-spacing:1px;
+  }
+  .balance-amount {
+    font-size:28px;
+  }
+  .money-details {
+    gap:17px;
+  }
+  .utility-actions {
+    gap:18px;
+  }
+  .hand-score {
+    right:3%;
+  }
+  .banker-zone .hand-score {
+    left:3%;
+  }
+}
+
+@media(max-width:900px) {
+  .machine {
+    height:auto;
+    min-height:100svh;
+    max-height:none;
+    grid-template-rows:64px 234px minmax(300px,40svh) auto;
+    overflow:hidden;
+  }
+  .machine-header {
+    padding:0 4%;
+  }
+  .wordmark {
+    font-size:18px;
+    letter-spacing:2px;
+    gap:8px;
+  }
+  .brand-symbol {
+    font-size:31px;
+  }
+  .wordmark small {
+    font-size:6px;
+    letter-spacing:2px;
+  }
+  .live-status {
+    font-size:16px;
+    letter-spacing:1px;
+    left:auto;
+    right:4%;
+    transform:none;
+  }
+  .header-meta {
+    display:none;
+  }
+  .scoreboard {
+    grid-template-columns:125px 1fr;
+    padding:14px 3%;
+    gap:12px;
+  }
+  .score-totals {
+    padding-right:10px;
+  }
+  .score-heading {
+    font-size:11px;
+    display:block;
+  }
+  .score-heading>span:last-child {
+    display:block;
+    margin-top:4px;
+    font-size:8px;
+  }
+  .score-row {
+    font-size:9px;
+    gap:5px;
+  }
+  .score-row strong {
+    font-size:14px;
+  }
+  .stat-icon {
+    width:23px;
+    height:21px;
+    font-size:9px;
+    flex-shrink:0;
+  }
+  .score-total {
+    font-size:10px;
+    gap:5px;
+    padding-top:6px;
+    margin-top:5px;
+  }
+  .score-total strong {
+    font-size:17px;
+  }
+  .round-unit {
+    display:none;
+  }
+  .roads {
+    gap:9px;
+    grid-template-rows:1.3fr 1fr;
+  }
+  .derived-roads {
+    gap:7px;
+  }
+  .road-caption {
+    font-size:7px;
+    letter-spacing:.6px;
+    height:19px;
+  }
+  .caption-ko,.road-legend,.road-type {
+    display:none;
+  }
+  .felt {
+    padding:5px 3% 30px;
+  }
+  .felt-side-note {
+    display:none;
+  }
+  .pair-row {
+    height:48px;
+  }
+  .pair-zone {
+    font-size:12px;
+    letter-spacing:1px;
+    gap:4px;
+  }
+  .pair-zone small {
+    font-size:8px;
+    letter-spacing:0;
+  }
+  .table-ornament {
+    font-size:21px;
+    letter-spacing:3px;
+  }
+  .bet-zone {
+    padding-top:17px;
+  }
+  .tie-zone {
+    padding-top:35px;
+  }
+  .zone-heading {
+    width:88%;
+    gap:5px;
+  }
+  .zone-heading strong {
+    font-size:22px;
+    letter-spacing:2px;
+    padding:9px 2px;
+  }
+  .zone-en {
+    font-size:8px;
+    letter-spacing:2px;
+  }
+  .hand {
+    height:64px;
+    gap:3px;
+    margin-top:16px;
+  }
+  .hand-score {
+    font-size:13px;
+    height:22px;
+    min-width:22px;
+    line-height:22px;
+    top:auto;
+    bottom:39px;
+    right:9%;
+  }
+  .banker-zone .hand-score {
+    left:9%;
+  }
+  .card-corner {
+    font-size:10px;
+    left:3px;
+    top:3px;
+  }
+  .card-corner.bottom {
+    right:3px;
+    bottom:3px;
+  }
+  .playing-card {
+    font-size:22px;
+  }
+  .wager {
+    bottom:39px;
+    gap:5px;
+  }
+  .wager-amount {
+    font-size:12px;
+    padding:4px 6px;
+  }
+  .chip-stack {
+    width:28px;
+    height:28px;
+  }
+  .mini-chip {
+    width:26px;
+    height:26px;
+  }
+  .mini-chip::after {
+    inset:5px;
+    font-size:9px;
+    border-width:1px;
+  }
+  .payout {
+    font-size:11px;
+    letter-spacing:1px;
+    bottom:13px;
+  }
+  .tie-emblem {
+    font-size:27px;
+    letter-spacing:2px;
+  }
+  .table-footnote {
+    font-size:8px;
+    bottom:9px;
+  }
+  .table-footnote>span:nth-child(2) {
+    display:none;
+  }
+  .console {
+    grid-template-columns:1fr 1fr;
+    grid-template-rows:auto auto 45px;
+    padding:0 4%;
+    border-top-width:2px;
+  }
+  .balance-panel {
+    padding:20px 0 14px;
+  }
+  .balance-label {
+    font-size:10px;
+    gap:10px;
+  }
+  .balance-amount {
+    font-size:31px;
+    margin-top:8px;
+  }
+  .money-details {
+    margin-top:13px;
+    gap:22px;
+  }
+  .money-details span {
+    font-size:9px;
+  }
+  .money-details strong {
+    font-size:13px;
+  }
+  .chip-tray {
+    grid-column:1/-1;
+    grid-row:2;
+    border:0;
+    border-top:1px solid #fff1;
+    padding:17px 0 23px;
+  }
+  .tray-caption {
+    margin-bottom:16px;
+  }
+  .chips {
+    justify-content:space-evenly;
+    gap:18px;
+  }
+  .casino-chip {
+    width:clamp(64px,12vw,95px);
+  }
+  .chip-face strong {
+    font-size:clamp(11px,1.9vw,17px);
+  }
+  .chip-face small {
+    font-size:5px;
+  }
+  .play-controls {
+    grid-column:2;
+    grid-row:1;
+    padding:15px 0 12px 13%;
+    gap:8px;
+  }
+  .bet-tools {
+    gap:5px;
+  }
+  .bet-tools button {
+    font-size:10px;
+    min-height:34px;
+  }
+  .deal-button {
+    height:47px;
+    font-size:17px;
+    padding:0 15px;
+  }
+  .repeat-button {
+    font-size:10px;
+    min-height:30px;
+  }
+  .utility-bar {
+    grid-row:3;
+  }
+  .utility-left {
+    font-size:8px;
+  }
+  .utility-separator,#round-label {
+    display:none;
+  }
+  .utility-actions {
+    gap:16px;
+  }
+  .utility-actions button {
+    font-size:10px;
+    min-height:40px;
+  }
+  .utility-actions button>span {
+    display:none;
+  }
+  #fullscreen-button {
+    display:none;
+  }
+  .toast {
+    bottom:25px;
+    font-size:12px;
+  }
+  .panel-dialog {
+    max-height:90svh;
+  }
+  .dialog-header {
+    padding:20px;
+  }
+  .dialog-body {
+    padding:20px;
+    max-height:calc(90svh - 100px);
+  }
+}
+
+@media(max-width:480px) {
+  .machine {
+    grid-template-rows:61px 216px 305px auto;
+  }
+  .wordmark {
+    font-size:15px;
+  }
+  .brand-symbol {
+    font-size:27px;
+  }
+  .wordmark small {
+    font-size:5px;
+    letter-spacing:1.8px;
+  }
+  .live-status {
+    font-size:14px;
+    gap:6px;
+  }
+  .status-dot {
+    width:5px;
+    height:5px;
+  }
+  .scoreboard {
+    grid-template-columns:105px 1fr;
+    gap:9px;
+    padding:12px 3%;
+  }
+  .score-totals {
+    padding-right:7px;
+  }
+  .score-row {
+    font-size:8px;
+    gap:4px;
+  }
+  .score-row strong {
+    font-size:13px;
+  }
+  .stat-icon {
+    width:21px;
+    height:20px;
+    font-size:8px;
+  }
+  .road-caption {
+    font-size:6px;
+    letter-spacing:.1px;
+  }
+  .derived-roads {
+    gap:5px;
+  }
+  .felt {
+    padding-left:2%;
+    padding-right:2%;
+  }
+  .zone-heading strong {
+    font-size:18px;
+    letter-spacing:1px;
+    padding:9px 0;
+  }
+  .zone-en {
+    font-size:7px;
+  }
+  .pair-zone {
+    font-size:10px;
+  }
+  .pair-zone small {
+    font-size:7px;
+  }
+  .pair-row {
+    height:43px;
+  }
+  .bet-zone {
+    padding-left:3px;
+    padding-right:3px;
+  }
+  .player-zone {
+    padding-left:12%;
+  }
+  .banker-zone {
+    padding-right:12%;
+  }
+  .zone-heading {
+    width:90%;
+  }
+  .hand {
+    height:51px;
+    margin-top:20px;
+    gap:2px;
+  }
+  .playing-card {
+    font-size:19px;
+  }
+  .card-corner {
+    font-size:8px;
+    left:2px;
+    top:2px;
+  }
+  .card-corner.bottom {
+    right:2px;
+    bottom:2px;
+  }
+  .hand-score {
+    bottom:71px;
+    right:16%;
+    font-size:12px;
+    min-width:19px;
+    height:19px;
+    line-height:19px;
+  }
+  .banker-zone .hand-score {
+    left:16%;
+  }
+  .wager {
+    gap:3px;
+    bottom:39px;
+  }
+  .wager-amount {
+    font-size:11px;
+    padding:4px;
+  }
+  .chip-stack {
+    width:22px;
+    height:24px;
+  }
+  .mini-chip {
+    height:23px;
+    width:23px;
+  }
+  .payout {
+    font-size:10px;
+    letter-spacing:0;
+  }
+  .betting-zones {
+    gap:3px;
+  }
+  .tie-emblem {
+    font-size:22px;
+  }
+  .balance-amount {
+    font-size:27px;
+  }
+  .balance-label {
+    font-size:9px;
+    gap:6px;
+  }
+  .bet-availability {
+    font-size:8px;
+    padding:3px 4px;
+  }
+  .money-details {
+    gap:13px;
+  }
+  .money-details strong {
+    font-size:12px;
+  }
+  .money-details span {
+    font-size:8px;
+  }
+  .play-controls {
+    padding-left:8%;
+  }
+  .bet-tools button {
+    font-size:8px;
+    min-height:34px;
+  }
+  .bet-tools button>span {
+    display:none;
+  }
+  .deal-button {
+    font-size:16px;
+  }
+  .repeat-button {
+    font-size:9px;
+  }
+  .utility-left {
+    max-width:77px;
+    font-size:7px;
+    gap:5px;
+  }
+  .utility-actions {
+    gap:12px;
+  }
+  .utility-actions button {
+    font-size:9px;
+  }
+  .form-row {
+    grid-template-columns:1fr;
+  }
+  .stats-grid {
+    gap:8px;
+  }
+  .stat-box {
+    padding:12px 9px;
+  }
+  .stat-box strong {
+    font-size:17px;
+  }
+  .stat-box span {
+    font-size:9px;
+  }
+  .dialog-body table {
+    font-size:10px;
+  }
+  .dialog-body td,.dialog-body th {
+    padding:10px 5px;
+  }
+  .casino-chip {
+    width:65px;
+  }
+  .chips {
+    gap:17px;
+  }
+  .chip-face strong {
+    font-size:11px;
+  }
+  .chip-face small {
+    font-size:4px;
+    letter-spacing:.3px;
+  }
+  .chip-face>span {
+    font-size:8px;
+  }
+  .chip-face {
+    inset:20%;
+    gap:2px;
+  }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after {
+    animation-duration:.001ms!important;
+    transition-duration:.001ms!important;
+    scroll-behavior:auto!important;
+  }
+}
+
+
+</style>
+  <script>document.addEventListener('DOMContentLoaded', () => {
+'use strict';
+// UI-independent, standard commission baccarat. All money is integer virtual KRW.
+const SIDES = ['player', 'tie', 'banker'];
+const CHIP_VALUES = [1000, 5000, 10000, 100000];
+const INITIAL_BALANCE = 1000000;
+const emptyBets = () => ({ player: 0, tie: 0, banker: 0 });
+const totalBet = (bets) => SIDES.reduce((sum, side) => sum + bets[side], 0);
+const cardValue = (card) => Math.min(card.rank, 10) % 10;
+const handTotal = (cards) => cards.reduce((sum, card) => sum + cardValue(card), 0) % 10;
+
+function randomIndex(max) {
+  const limit = Math.floor(0x100000000 / max) * max;
+  const bytes = new Uint32Array(1);
+  do { globalThis.crypto.getRandomValues(bytes); } while (bytes[0] >= limit);
+  return bytes[0] % max;
+}
+
+function createShoe(decks = 8, pick = randomIndex) {
+  if (!Number.isInteger(decks) || decks < 1 || decks > 8) throw new Error('Invalid deck count');
+  const shoe = [];
+  for (let deck = 0; deck < decks; deck++) {
+    for (const suit of ['spades', 'hearts', 'diamonds', 'clubs']) {
+      for (let rank = 1; rank <= 13; rank++) shoe.push({ rank, suit });
+    }
+  }
+  for (let i = shoe.length - 1; i > 0; i--) {
+    const j = pick(i + 1);
+    [shoe[i], shoe[j]] = [shoe[j], shoe[i]];
+  }
+  return shoe;
+}
+
+function prepareShoe(pick = randomIndex) {
+  const shoe = createShoe(8, pick);
+  const burn = shoe.pop();
+  // Burn the exposed card plus its rank count (10/J/Q/K count as ten).
+  shoe.splice(-Math.min(burn.rank, 10));
+  return shoe;
+}
+
+function bankerDraws(total, playerThird = null) {
+  if (playerThird === null) return total <= 5;
+  if (total <= 2) return true;
+  if (total === 3) return playerThird !== 8;
+  if (total === 4) return playerThird >= 2 && playerThird <= 7;
+  if (total === 5) return playerThird >= 4 && playerThird <= 7;
+  if (total === 6) return playerThird === 6 || playerThird === 7;
+  return false;
+}
+
+// Mutates only the supplied shoe. Deal order: P B P B [P] [B].
+function dealRound(shoe) {
+  if (shoe.length < 6) throw new Error('Not enough cards in shoe');
+  const player = [], banker = [], sequence = [];
+  const draw = (side, hand) => {
+    const card = shoe.pop();
+    hand.push(card);
+    sequence.push({ side, card });
+  };
+  draw('player', player); draw('banker', banker);
+  draw('player', player); draw('banker', banker);
+  const natural = handTotal(player) >= 8 || handTotal(banker) >= 8;
+  if (!natural) {
+    if (handTotal(player) <= 5) draw('player', player);
+    if (bankerDraws(handTotal(banker), player[2] ? cardValue(player[2]) : null)) draw('banker', banker);
+  }
+  const playerTotal = handTotal(player), bankerTotal = handTotal(banker);
+  return {
+    player, banker, sequence, playerTotal, bankerTotal, natural,
+    winner: playerTotal === bankerTotal ? 'tie' : playerTotal > bankerTotal ? 'player' : 'banker',
+    playerPair: player[0].rank === player[1].rank,
+    bankerPair: banker[0].rank === banker[1].rank,
+  };
+}
+
+function validBets(bets) {
+  return bets && SIDES.every((side) => Number.isSafeInteger(bets[side]) && bets[side] >= 0 && bets[side] % 1000 === 0);
+}
+
+function placeBet(balance, bets, side, amount) {
+  if (!SIDES.includes(side) || !CHIP_VALUES.includes(amount) || !validBets(bets)) throw new Error('Invalid bet');
+  if (balance < amount) throw new Error('가상 잔액이 부족합니다.');
+  return { balance: balance - amount, bets: { ...bets, [side]: bets[side] + amount } };
+}
+
+function settleBets(bets, winner) {
+  if (!validBets(bets) || !SIDES.includes(winner)) throw new Error('Invalid settlement');
+  const stake = totalBet(bets);
+  let returned = 0;
+  if (winner === 'tie') returned = bets.player + bets.banker + bets.tie * 9;
+  if (winner === 'player') returned = bets.player * 2;
+  if (winner === 'banker') returned = bets.banker + bets.banker * 95 / 100;
+  return { stake, returned, profit: returned - stake };
+}
+
+function summarize(history) {
+  const totals = { player: 0, banker: 0, tie: 0, playerPair: 0, bankerPair: 0, rounds: history.length, profit: 0, wagered: 0 };
+  for (const result of history) {
+    totals[result.winner]++;
+    if (result.playerPair) totals.playerPair++;
+    if (result.bankerPair) totals.bankerPair++;
+    totals.profit += result.profit || 0;
+    totals.wagered += result.stake || 0;
+  }
+  return totals;
+}
+
+
+// Road coordinates are independent of the view. Ties annotate the last decisive hand.
+function layoutRoad(values, rows = 6) {
+  const cells = [], occupied = new Set();
+  let previous = null, startColumn = -1, column = 0, row = 0, tail = false;
+  for (const entry of values) {
+    const value = typeof entry === 'string' ? entry : entry.value;
+    if (value !== previous) {
+      startColumn++;
+      while (occupied.has(`${startColumn},0`)) startColumn++;
+      column = startColumn; row = 0; tail = false;
+    } else if (!tail && row < rows - 1 && !occupied.has(`${column},${row + 1}`)) {
+      row++;
+    } else {
+      tail = true; column++;
+      while (occupied.has(`${column},${row}`)) column++;
+    }
+    const cell = { ...(typeof entry === 'object' ? entry : {}), value, column, row };
+    cells.push(cell); occupied.add(`${column},${row}`); previous = value;
+  }
+  return cells;
+}
+
+function bigRoad(history) {
+  const decisive = [];
+  let leadingTies = 0, leadingPlayerPair = false, leadingBankerPair = false;
+  for (const hand of history) {
+    if (hand.winner === 'tie') {
+      if (decisive.length) {
+        const last = decisive.at(-1);
+        last.ties++;
+        last.playerPair ||= hand.playerPair;
+        last.bankerPair ||= hand.bankerPair;
+      } else {
+        leadingTies++;
+        leadingPlayerPair ||= hand.playerPair;
+        leadingBankerPair ||= hand.bankerPair;
+      }
+    } else {
+      decisive.push({ value: hand.winner, ties: decisive.length ? 0 : leadingTies,
+        playerPair: !!hand.playerPair || (!decisive.length && leadingPlayerPair),
+        bankerPair: !!hand.bankerPair || (!decisive.length && leadingBankerPair) });
+    }
+  }
+  if (!decisive.length && leadingTies) return [{ value: 'tie', ties: leadingTies, playerPair: leadingPlayerPair, bankerPair: leadingBankerPair, row: 0, column: 0 }];
+  return layoutRoad(decisive);
+}
+
+// Derived roads compare logical streak columns before six-row display folding.
+// First row: compare lengths of the two preceding columns at the selected distance.
+// Other rows: equal occupancy immediately left = red; a new gap = blue.
+function derivedRoad(history, distance = 1) {
+  if (![1, 2, 3].includes(distance)) throw new Error('Invalid derived road distance');
+  const lengths = [], marks = [];
+  let previous = null, column = -1, row = 0;
+  for (const hand of history) {
+    if (hand.winner === 'tie') continue;
+    if (hand.winner !== previous) { column++; row = 0; lengths.push(1); }
+    else { row++; lengths[column]++; }
+    previous = hand.winner;
+    if (row === 0) {
+      if (column >= distance + 1) marks.push(lengths[column - 1] === lengths[column - distance - 1] ? 'red' : 'blue');
+    } else if (column >= distance) {
+      const referenceLength = lengths[column - distance];
+      marks.push(row === referenceLength ? 'blue' : 'red');
+    }
+  }
+  return layoutRoad(marks);
+}
+
+
+
+const STORAGE_KEY = 'baccarat-table.session.v1';
+function newSession() {
+  return { version: 1, balance: INITIAL_BALANCE, bets: emptyBets(), lastBets: emptyBets(),
+    selectedChip: 1000, shoe: prepareShoe(), shoeNumber: 1, history: [], roundNumber: 0,
+    totals: summarize([]), lastProfit: 0, settings: { fast: false, sound: false } };
+}
+
+const validCard = (c) => c && Number.isInteger(c.rank) && c.rank >= 1 && c.rank <= 13 && ['spades', 'hearts', 'diamonds', 'clubs'].includes(c.suit);
+function validateSession(s) {
+  return !!(s && s.version === 1 && Number.isSafeInteger(s.balance) && s.balance >= 0 &&
+    validBets(s.bets) && validBets(s.lastBets) && CHIP_VALUES.includes(s.selectedChip) &&
+    Array.isArray(s.shoe) && s.shoe.length <= 416 && s.shoe.every(validCard) &&
+    Number.isSafeInteger(s.shoeNumber) && s.shoeNumber >= 1 &&
+    Number.isSafeInteger(s.roundNumber) && s.roundNumber >= 0 &&
+    Number.isSafeInteger(s.lastProfit) && Array.isArray(s.history) && s.history.length <= 2000 &&
+    s.history.every((h) => ['player', 'banker', 'tie'].includes(h.winner) && Number.isSafeInteger(h.id) &&
+      Number.isSafeInteger(h.shoeNumber) && typeof h.time === 'string' && !Number.isNaN(Date.parse(h.time)) &&
+      Number.isSafeInteger(h.profit) && Number.isSafeInteger(h.stake) && validBets(h.bets) &&
+      Array.isArray(h.player) && Array.isArray(h.banker) && h.player.length >= 2 && h.player.length <= 3 &&
+      h.banker.length >= 2 && h.banker.length <= 3 && h.player.every(validCard) && h.banker.every(validCard) &&
+      Number.isInteger(h.playerTotal) && h.playerTotal >= 0 && h.playerTotal <= 9 &&
+      Number.isInteger(h.bankerTotal) && h.bankerTotal >= 0 && h.bankerTotal <= 9) &&
+    s.totals && ['player', 'banker', 'tie', 'playerPair', 'bankerPair', 'rounds', 'wagered'].every((key) => Number.isSafeInteger(s.totals[key]) && s.totals[key] >= 0) &&
+    Number.isSafeInteger(s.totals.profit) && s.settings && typeof s.settings.fast === 'boolean' && typeof s.settings.sound === 'boolean');
+}
+
+function loadSession(storage) {
+  try {
+    const raw = storage.getItem(STORAGE_KEY);
+    if (!raw) return { session: newSession(), warning: null };
+    const parsed = JSON.parse(raw);
+    if (!validateSession(parsed)) throw new Error('Invalid session');
+    return { session: parsed, warning: null };
+  } catch {
+    return { session: newSession(), warning: '저장된 기록을 불러오지 못해 새 세션을 시작했습니다.' };
+  }
+}
+
+function saveSession(storage, session) {
+  try { storage.setItem(STORAGE_KEY, JSON.stringify(session)); return true; }
+  catch { return false; }
+}
+
+// Complete settlement once, before visual animation starts. Reloading cannot pay twice.
+function playRound(session, now = new Date().toISOString()) {
+  if (!totalBet(session.bets)) throw new Error('먼저 배팅할 영역을 선택해주세요.');
+  if (session.shoe.length <= 14) {
+    session.shoe = prepareShoe(); session.shoeNumber++;
+  }
+  const result = dealRound(session.shoe);
+  const settlement = settleBets(session.bets, result.winner);
+  const record = { ...result, ...settlement, bets: { ...session.bets },
+    id: ++session.roundNumber, shoeNumber: session.shoeNumber, time: now };
+  session.balance += settlement.returned;
+  session.lastProfit = settlement.profit;
+  session.lastBets = { ...session.bets };
+  session.bets = emptyBets();
+  session.history.push(record);
+  if (session.history.length > 2000) session.history.splice(0, session.history.length - 2000);
+  const delta = summarize([record]);
+  for (const key of Object.keys(delta)) session.totals[key] += delta[key];
+  return record;
+}
+
+
+
+const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => [...document.querySelectorAll(selector)];
+const money = (value) => `₩${Math.abs(value).toLocaleString('ko-KR')}`;
+const signedMoney = (value) => `${value > 0 ? '+' : value < 0 ? '−' : ''}${money(value)}`;
+const names = { player: '플레이어', banker: '뱅커', tie: '타이' };
+const suits = { spades: '♠', hearts: '♥', diamonds: '♦', clubs: '♣' };
+const suitNames = { spades: '스페이드', hearts: '하트', diamonds: '다이아몬드', clubs: '클로버' };
+const rankName = (rank) => ({ 1: 'A', 11: 'J', 12: 'Q', 13: 'K' }[rank] || String(rank));
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+let storage;
+try { storage = window.localStorage; } catch { storage = { getItem: () => null, setItem: () => { throw new Error('Storage unavailable'); } }; }
+const loaded = loadSession(storage);
+let session = loaded.session;
+let phase = 'betting', betSteps = [], activeRecord = null, resultTimer, toastTimer;
+let displayedBalance = session.balance, displayedProfit = session.lastProfit;
+let simulationRunning = false, cancelSimulation = false, lastSimulation = null;
+let audioContext;
+let storageNoticeShown = false;
+const motionReduced = matchMedia('(prefers-reduced-motion: reduce)');
+
+function toast(message) {
+  $('#toast').textContent = message;
+  $('#toast').classList.add('visible');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $('#toast').classList.remove('visible'), 3300);
+}
+
+function persist() {
+  const success = saveSession(storage, session);
+  $('#save-indicator').textContent = success ? '이 기기에 자동 저장' : '저장 불가 · 현재 창에서만 유지';
+  if (!success && !storageNoticeShown) { toast('브라우저 저장소를 사용할 수 없어 새로고침하면 기록이 사라집니다.'); storageNoticeShown = true; }
+}
+
+function playSound(kind = 'chip') {
+  if (!session.settings.sound) return;
+  try {
+    audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
+    audioContext.resume().catch(() => {});
+    const oscillator = audioContext.createOscillator(), gain = audioContext.createGain();
+    oscillator.connect(gain); gain.connect(audioContext.destination);
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(kind === 'result' ? 660 : kind === 'card' ? 330 : 950, audioContext.currentTime);
+    gain.gain.setValueAtTime(.035, audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.001, audioContext.currentTime + .11);
+    oscillator.start(); oscillator.stop(audioContext.currentTime + .12);
+  } catch { /* Sound is optional and must never block play. */ }
+}
+
+function setStatus(text, detail = '') {
+  $('#status-text').textContent = text;
+  $('#status-detail').textContent = detail;
+  $('.status-dot').style.background = phase === 'dealing' ? '#dfc084' : phase === 'result' ? '#e9cf95' : '#96d98e';
+}
+
+function visibleHistory() {
+  return phase === 'dealing' && activeRecord ? session.history.slice(0, -1) : session.history;
+}
+
+function renderRoad(element, cells, type, label) {
+  const cellSize = Math.max(6, element.clientHeight / 6);
+  const columns = Math.max(1, Math.floor(element.clientWidth / cellSize));
+  const lastColumn = cells.reduce((max, c) => Math.max(max, c.column), 0);
+  const offset = Math.max(0, lastColumn - columns + 1);
+  element.style.setProperty('--cell', `${cellSize}px`);
+  element.innerHTML = cells.filter((c) => c.column >= offset).map((c) => {
+    const cls = `road-mark ${c.value} ${type} ${c.ties ? 'with-tie' : ''}`;
+    return `<span class="${cls}" style="--column:${c.column - offset};--row:${c.row}">${c.ties > 1 ? `<span class="tie-count">${c.ties}</span>` : ''}${c.playerPair ? '<i class="pair-dot pp"></i>' : ''}${c.bankerPair ? '<i class="pair-dot bp"></i>' : ''}</span>`;
+  }).join('');
+  element.setAttribute('aria-label', `${label}: ${cells.length ? `${cells.length}개 표시, 최근 ${columns}열` : '기록 없음'}`);
+}
+
+function renderRoads() {
+  const history = visibleHistory().filter((h) => h.shoeNumber === session.shoeNumber);
+  const totals = summarize(history);
+  for (const key of ['player', 'banker', 'tie', 'playerPair', 'bankerPair', 'rounds']) $(`#count-${key}`).textContent = totals[key];
+  $('#shoe-label').textContent = `SHOE ${String(session.shoeNumber).padStart(3, '0')}`;
+  renderRoad($('#big-road'), bigRoad(history), '', '대로드');
+  renderRoad($('#eye-road'), derivedRoad(history, 1), '', '빅아이 로드');
+  renderRoad($('#small-road'), derivedRoad(history, 2), 'solid', '스몰 로드');
+  renderRoad($('#roach-road'), derivedRoad(history, 3), 'slash', '코크로치 로드');
+}
+
+function renderWagers() {
+  const bets = phase === 'betting' ? session.bets : activeRecord?.bets || session.bets;
+  for (const side of SIDES) {
+    const amount = bets[side];
+    const target = $(`#wager-${side}`);
+    if (!amount) { target.replaceChildren(); continue; }
+    const denomination = [...CHIP_VALUES].reverse().find((chip) => amount >= chip) || 1000;
+    const layers = Math.min(3, Math.ceil(amount / denomination));
+    target.innerHTML = `<span class="chip-stack" aria-hidden="true">${Array.from({ length: layers }, (_, i) => `<i class="mini-chip chip-${denomination}" style="--stack:${i}"></i>`).join('')}</span><strong class="wager-amount">${money(amount)}</strong>`;
+  }
+}
+
+function renderWallet() {
+  const dealing = phase === 'dealing';
+  $('#balance').textContent = money(dealing ? displayedBalance : session.balance);
+  const bets = phase === 'betting' ? session.bets : activeRecord?.bets || session.bets;
+  $('#total-bet').textContent = money(totalBet(bets));
+  const profit = dealing ? displayedProfit : session.lastProfit;
+  $('#last-profit').textContent = signedMoney(profit);
+  $('#last-profit').className = profit > 0 ? 'positive' : profit < 0 ? 'negative' : '';
+  $('#bet-availability').textContent = phase === 'betting' ? (session.balance >= 1000 ? '배팅 가능' : '잔액 부족') : phase === 'dealing' ? '배팅 마감' : '정산 완료';
+  $('#round-label').textContent = `ROUND ${String(dealing ? session.roundNumber - 1 : session.roundNumber).padStart(3, '0')}`;
+  $('#deck-info').textContent = `8 DECKS · ${session.shoe.length} CARDS LEFT`;
+}
+
+function renderControls() {
+  const open = phase === 'betting', stake = totalBet(session.bets);
+  const displayedBets = open ? session.bets : activeRecord?.bets || session.bets;
+  $$('.bet-zone').forEach((button) => {
+    button.disabled = !open;
+    button.setAttribute('aria-label', `${names[button.dataset.side]}${open ? `에 ${money(session.selectedChip)} 배팅` : ' 배팅 마감'}, 현재 ${money(displayedBets[button.dataset.side])}`);
+  });
+  $$('.casino-chip').forEach((button) => {
+    const selected = Number(button.dataset.chip) === session.selectedChip;
+    button.classList.toggle('selected', selected);
+    button.setAttribute('aria-pressed', String(selected));
+    button.disabled = !open;
+  });
+  $('#selected-chip-label').textContent = `선택한 칩 ${money(session.selectedChip)}`;
+  $('#undo-button').disabled = !open || !betSteps.length;
+  $('#clear-button').disabled = !open || !stake;
+  $('#double-button').disabled = !open || !stake || session.balance < stake;
+  $('#repeat-button').disabled = !open || !totalBet(session.lastBets) || session.balance + stake < totalBet(session.lastBets);
+  $('#deal-button').disabled = phase === 'dealing' || (open && !stake);
+  $('#deal-button').firstElementChild.textContent = phase === 'dealing' ? '카드 배분 중' : phase === 'result' ? '다음 게임' : '게임 시작';
+  for (const id of ['simulation-button', 'settings-button', 'history-button', 'stats-button']) $(`#${id}`).disabled = phase !== 'betting';
+}
+
+function renderAll() { renderWallet(); renderControls(); renderWagers(); renderRoads(); }
+
+function clearTableCards() {
+  for (const side of ['player', 'banker']) {
+    $(`#hand-${side}`).replaceChildren(); $(`#score-${side}`).textContent = '';
+  }
+  $$('.bet-zone').forEach((button) => button.classList.remove('winning'));
+  $('#tie-emblem').textContent = '8 : 1';
+}
+
+function addBet(side) {
+  if (phase !== 'betting') return;
+  try {
+    const next = placeBet(session.balance, session.bets, side, session.selectedChip);
+    betSteps.push({ balance: session.balance, bets: { ...session.bets } });
+    Object.assign(session, next);
+    persist(); renderWallet(); renderControls(); renderWagers(); playSound();
+  } catch (error) { toast(error.message); }
+}
+
+function selectChip(chip) {
+  if (phase !== 'betting') return;
+  session.selectedChip = chip; persist(); renderControls(); playSound();
+}
+
+function cardMarkup(card) {
+  const rank = rankName(card.rank), suit = suits[card.suit];
+  return `<span class="playing-card ${['hearts', 'diamonds'].includes(card.suit) ? 'red-suit' : ''}" role="img" aria-label="${suitNames[card.suit]} ${rank}"><span class="card-corner">${rank}<span>${suit}</span></span><span class="card-center">${suit}</span><span class="card-corner bottom">${rank}<span>${suit}</span></span></span>`;
+}
+
+function nextRound() {
+  if (phase === 'dealing') return;
+  clearTimeout(resultTimer); phase = 'betting'; activeRecord = null;
+  clearTableCards(); setStatus('배팅하십시오', '칩을 선택하고 테이블을 터치하세요'); renderAll();
+  if (session.balance < 1000) toast('가상 잔액이 부족합니다. 설정에서 가상 금액을 충전할 수 있습니다.');
+}
+
+async function startRound() {
+  if (phase === 'result') { nextRound(); return; }
+  if (phase !== 'betting' || !totalBet(session.bets)) return;
+  clearTableCards();
+  displayedBalance = session.balance; displayedProfit = session.lastProfit;
+  phase = 'dealing';
+  try { activeRecord = playRound(session); }
+  catch (error) { phase = 'betting'; toast(error.message); renderAll(); return; }
+  betSteps = []; persist();
+  setStatus('배팅 마감', '카드를 배분하고 있습니다'); renderWallet(); renderControls(); renderWagers();
+  const speed = motionReduced.matches ? 70 : session.settings.fast ? 160 : 470;
+  const hands = { player: [], banker: [] };
+  await delay(speed);
+  for (const { side, card } of activeRecord.sequence) {
+    hands[side].push(card);
+    $(`#hand-${side}`).insertAdjacentHTML('beforeend', cardMarkup(card));
+    $(`#score-${side}`).textContent = handTotal(hands[side]);
+    playSound('card');
+    await delay(speed);
+  }
+  phase = 'result';
+  const resultText = activeRecord.winner === 'tie' ? '타이' : `${names[activeRecord.winner]} 승리`;
+  setStatus(resultText, `${activeRecord.playerTotal} : ${activeRecord.bankerTotal}`);
+  $(`#bet-${activeRecord.winner}`).classList.add('winning');
+  if (activeRecord.winner === 'tie') $('#tie-emblem').textContent = 'TIE';
+  renderAll(); playSound('result');
+  resultTimer = setTimeout(nextRound, session.settings.fast ? 1800 : 4500);
+}
+
+function openPanel(title, html, eyebrow = 'BACCARAT · TABLE 01') {
+  $('#dialog-title').textContent = title; $('#dialog-eyebrow').textContent = eyebrow;
+  $('#dialog-body').innerHTML = html;
+  if (!$('#panel-dialog').open) $('#panel-dialog').showModal();
+}
+
+function downloadFile(filename, content, type) {
+  const url = URL.createObjectURL(new Blob(['\uFEFF', content], { type }));
+  const anchor = document.createElement('a'); anchor.href = url; anchor.download = filename;
+  document.body.append(anchor); anchor.click(); anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function showHistory(limit = 100) {
+  const records = [...session.history].reverse().slice(0, limit);
+  openPanel('게임 기록', `<div class="dialog-toolbar"><span>전체 ${session.roundNumber.toLocaleString()}판 · 최근 ${records.length}판 표시</span><button class="secondary-button" id="export-history" ${!records.length ? 'disabled' : ''}>CSV 내보내기 ↓</button></div>${records.length ? `<div class="table-wrap"><table><thead><tr><th>회차</th><th>시간</th><th>결과</th><th>P : B</th><th>배팅</th><th>손익</th></tr></thead><tbody>${records.map((r) => `<tr><td>#${r.id}</td><td>${new Date(r.time).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}</td><td><span class="result-pill ${r.winner}">${names[r.winner]}</span></td><td>${r.playerTotal} : ${r.bankerTotal}</td><td>${money(r.stake)}</td><td class="${r.profit > 0 ? 'positive' : r.profit < 0 ? 'negative' : ''}">${signedMoney(r.profit)}</td></tr>`).join('')}</tbody></table></div>${session.history.length > limit ? '<button class="secondary-button" id="more-history" style="margin-top:16px">기록 더 보기</button>' : ''}` : '<div class="empty-state"><strong>아직 게임 기록이 없습니다</strong>칩을 선택하고 첫 게임을 시작해보세요.</div>'}<p class="note">최근 2,000판의 상세 기록을 이 브라우저에 보관합니다. 누적 통계는 모든 판을 포함합니다. CSV에는 보관 중인 모든 상세 기록이 포함됩니다.</p>`);
+  $('#export-history').onclick = () => {
+    const header = 'round,shoe,time,winner,player_score,banker_score,player_pair,banker_pair,player_bet,tie_bet,banker_bet,total_bet,profit';
+    const rows = session.history.map((r) => [r.id, r.shoeNumber, r.time, r.winner, r.playerTotal, r.bankerTotal, !!r.playerPair, !!r.bankerPair, r.bets.player, r.bets.tie, r.bets.banker, r.stake, r.profit].join(','));
+    downloadFile('baccarat-history.csv', [header, ...rows].join('\r\n'), 'text/csv;charset=utf-8');
+  };
+  if ($('#more-history')) $('#more-history').onclick = () => showHistory(limit + 100);
+}
+
+function statsMarkup(totals) {
+  const percent = (side) => totals.rounds ? (totals[side] / totals.rounds * 100).toFixed(1) : '0.0';
+  return `<div class="distribution" aria-label="플레이어 ${percent('player')}%, 뱅커 ${percent('banker')}%, 타이 ${percent('tie')}%"><span style="width:${percent('player')}%;background:#3d8aca"></span><span style="width:${percent('tie')}%;background:#6eab70"></span><span style="width:${percent('banker')}%;background:#d25d59"></span></div><div class="distribution-labels"><span>플레이어 ${percent('player')}%</span><span>타이 ${percent('tie')}%</span><span>뱅커 ${percent('banker')}%</span></div><div class="stats-grid"><div class="stat-box"><span>누적 게임</span><strong>${totals.rounds.toLocaleString()}</strong></div><div class="stat-box"><span>총 배팅 금액</span><strong>${money(totals.wagered)}</strong></div><div class="stat-box"><span>누적 손익</span><strong class="${totals.profit > 0 ? 'positive' : totals.profit < 0 ? 'negative' : ''}">${signedMoney(totals.profit)}</strong></div></div><table><thead><tr><th>결과</th><th>누적 횟수</th><th>비율</th></tr></thead><tbody>${['player', 'banker', 'tie', 'playerPair', 'bankerPair'].map((key) => `<tr><td>${names[key] || (key === 'playerPair' ? '플레이어 페어' : '뱅커 페어')}</td><td>${totals[key].toLocaleString()}</td><td>${totals.rounds ? (totals[key] / totals.rounds * 100).toFixed(2) : '0.00'}%</td></tr>`).join('')}</tbody></table>`;
+}
+
+function showStats() {
+  openPanel('누적 통계', `${statsMarkup(session.totals)}<p class="note">현재 세션 전체 게임의 통계입니다. 상단 기록판은 현재 슈의 결과만 표시합니다. 페어는 승패와 별도로 집계됩니다. 별도 시뮬레이션 결과는 포함하지 않습니다.</p>`);
+}
+
+function simulationChart(points) {
+  const min = Math.min(0, ...points), max = Math.max(0, ...points), spread = max - min || 1;
+  const y = (value) => 140 - (value - min) / spread * 120;
+  const path = points.map((value, i) => `${i === 0 ? 'M' : 'L'}${(i / Math.max(1, points.length - 1) * 660 + 10).toFixed(1)},${y(value).toFixed(1)}`).join(' ');
+  return `<svg class="sim-chart" viewBox="0 0 680 160" role="img" aria-label="시뮬레이션 누적 손익 그래프, 최종 ${signedMoney(points.at(-1))}"><path d="M10 ${y(0)}H670" stroke="#7e9a8050" stroke-dasharray="4 4"/><path d="${path}" fill="none" stroke="#d5c18b" stroke-width="2"/></svg><div class="chart-labels"><span>START</span><span>MIN ${signedMoney(min)} · MAX ${signedMoney(max)}</span><span>END</span></div>`;
+}
+
+function showSimulation() {
+  openPanel('시뮬레이션', `<p>같은 금액을 한 영역에 반복 배팅했을 때의 결과를 확인합니다.<br>테이블 잔액·카드 슈·게임 기록과 분리된 독립 시뮬레이션입니다.</p><form id="simulation-form"><div class="form-row"><label>게임 횟수<select id="sim-rounds"><option value="100">100판</option><option value="1000" selected>1,000판</option><option value="10000">10,000판</option></select></label><label>배팅 영역<select id="sim-side"><option value="banker">뱅커 · 1대0.95</option><option value="player">플레이어 · 1대1</option><option value="tie">타이 · 8대1</option></select></label><label>판당 가상 금액<input id="sim-amount" type="number" min="1000" max="1000000" step="1000" value="1000" required></label></div><div class="form-actions"><button class="primary-button" id="run-simulation" type="submit">시뮬레이션 실행</button><button class="secondary-button" id="cancel-simulation" type="button" hidden>중지</button><span id="sim-progress-label" role="status"></span></div></form><progress id="sim-progress" value="0" max="100" hidden aria-label="시뮬레이션 진행률"></progress><div id="simulation-result">${lastSimulation ? `<h2>직전 시뮬레이션 · ${names[lastSimulation.side]} / ${money(lastSimulation.amount)}</h2>${simulationChart(lastSimulation.points)}${statsMarkup(lastSimulation.totals)}` : ''}</div><p class="note">매 판 고정 금액을 투입하는 모형으로, 자금 소진 제한을 적용하지 않습니다. 무작위 결과이며 다음 게임의 승패를 예측하지 않습니다.</p>`, 'INDEPENDENT SIMULATION');
+  $('#simulation-form').onsubmit = (event) => { event.preventDefault(); runSimulation(); };
+  $('#cancel-simulation').onclick = () => { cancelSimulation = true; };
+}
+
+async function runSimulation() {
+  if (simulationRunning) return;
+  const count = Number($('#sim-rounds').value), side = $('#sim-side').value, amount = Number($('#sim-amount').value);
+  if (![100, 1000, 10000].includes(count) || !SIDES.includes(side) || !Number.isInteger(amount) || amount < 1000 || amount > 1000000 || amount % 1000) { toast('배팅 금액은 1,000~1,000,000원 사이의 1,000원 단위로 입력해주세요.'); return; }
+  simulationRunning = true; cancelSimulation = false;
+  $('#run-simulation').disabled = true; $('#cancel-simulation').hidden = false; $('#sim-progress').hidden = false;
+  for (const selector of ['#sim-rounds', '#sim-side', '#sim-amount']) $(selector).disabled = true;
+  $('#simulation-result').replaceChildren();
+  const totals = summarize([]), bets = { ...emptyBets(), [side]: amount }, points = [0];
+  let shoe = prepareShoe(), completed = 0;
+  try {
+    for (let i = 0; i < count; i++) {
+      if (cancelSimulation) break;
+      if (shoe.length <= 14) shoe = prepareShoe();
+      const result = dealRound(shoe), settlement = settleBets(bets, result.winner);
+      const delta = summarize([{ ...result, ...settlement }]);
+      for (const key of Object.keys(delta)) totals[key] += delta[key];
+      completed++;
+      if (completed % Math.max(1, Math.floor(count / 200)) === 0) points.push(totals.profit);
+      if (completed % 100 === 0 || completed === count) {
+        $('#sim-progress').value = completed / count * 100;
+        $('#sim-progress-label').textContent = `${completed.toLocaleString()} / ${count.toLocaleString()}`;
+        await delay(12);
+      }
+    }
+    if (points.at(-1) !== totals.profit) points.push(totals.profit);
+    lastSimulation = { totals, points, side, amount };
+    if ($('#simulation-result')) {
+      $('#simulation-result').innerHTML = `<h2>${cancelSimulation ? '중지됨' : '실행 완료'} · ${completed.toLocaleString()}판 · ${names[side]} / ${money(amount)}</h2>${simulationChart(points)}${statsMarkup(totals)}`;
+      $('#sim-progress-label').textContent = cancelSimulation ? `${completed.toLocaleString()}판에서 중지` : '완료';
+    }
+  } catch { toast('시뮬레이션을 완료하지 못했습니다. 다시 실행해주세요.'); }
+  finally {
+    simulationRunning = false;
+    if ($('#run-simulation')) {
+      $('#run-simulation').disabled = false; $('#cancel-simulation').hidden = true;
+      for (const selector of ['#sim-rounds', '#sim-side', '#sim-amount']) $(selector).disabled = false;
+    }
+  }
+}
+
+function showSettings() {
+  openPanel('테이블 설정', `<label class="setting-row"><span>빠른 카드 애니메이션<small>카드 배분과 결과 대기 시간을 줄입니다.</small></span><input type="checkbox" id="setting-fast" ${session.settings.fast ? 'checked' : ''}></label><label class="setting-row"><span>테이블 효과음<small>칩 선택, 카드 배분, 결과 알림에 짧은 효과음을 사용합니다.</small></span><input type="checkbox" id="setting-sound" ${session.settings.sound ? 'checked' : ''}></label><div class="setting-row"><span>새 카드 슈<small>현재 배팅을 취소하고 새 8덱 슈를 시작합니다.<br>누적 기록과 통계는 유지됩니다.</small></span><button id="new-shoe" class="secondary-button">새 슈</button></div><div class="setting-row"><span>가상 금액 충전<small>현금 가치가 없는 연습용 금액 ₩1,000,000을 추가합니다.</small></span><button id="top-up" class="secondary-button">충전</button></div><h2>데이터 관리</h2><p>기록은 이 브라우저에만 저장됩니다. 다른 기기나 브라우저에는 동기화되지 않습니다.</p><button id="reset-session" class="danger-button">기록과 잔액 초기화</button><div id="reset-confirm"></div>`);
+  $('#setting-fast').onchange = (event) => { session.settings.fast = event.target.checked; persist(); };
+  $('#setting-sound').onchange = (event) => { session.settings.sound = event.target.checked; persist(); playSound(); };
+  $('#new-shoe').onclick = () => {
+    session.balance += totalBet(session.bets); session.bets = emptyBets(); betSteps = [];
+    session.shoe = prepareShoe(); session.shoeNumber++; persist(); renderAll(); toast('새 8덱 슈를 시작했습니다.');
+  };
+  $('#top-up').onclick = () => {
+    if (session.balance > Number.MAX_SAFE_INTEGER - 2000000) { toast('최대 가상 잔액에 도달했습니다.'); return; }
+    session.balance += 1000000; betSteps = []; persist(); renderAll(); toast('가상 금액 ₩1,000,000을 충전했습니다.');
+  };
+  $('#reset-session').onclick = () => {
+    $('#reset-confirm').innerHTML = '<p style="margin-top:16px">모든 기록·통계·배팅이 삭제되고 가상 금액이 ₩1,000,000으로 초기화됩니다.</p><button class="danger-button" id="confirm-reset">전체 초기화 확인</button> <button class="secondary-button" id="cancel-reset">취소</button>';
+    $('#cancel-reset').onclick = () => $('#reset-confirm').replaceChildren();
+    $('#confirm-reset').onclick = () => {
+      session = newSession(); betSteps = []; lastSimulation = null; clearTableCards(); persist(); renderAll(); $('#panel-dialog').close(); toast('새 세션을 시작했습니다.');
+    };
+  };
+}
+
+function showHelp() {
+  openPanel('테이블 이용 안내', `<p>사진 속 전자식 바카라 테이블에서 영감을 받은 개인용 가상 시뮬레이터입니다. 모든 금액은 현금 가치가 없는 가상 칩입니다.</p><h2>플레이 방법</h2><ol><li>하단에서 원하는 금액의 칩을 선택합니다.</li><li>플레이어·타이·뱅커 영역을 누를 때마다 선택한 칩 금액이 추가됩니다.</li><li>게임 시작을 누르면 배팅이 마감되고 카드가 자동 배분됩니다.</li><li>정산 후 다음 판으로 전환됩니다. 이전 배팅 반복으로 같은 금액을 다시 놓을 수 있습니다.</li></ol><h2>표준 커미션 바카라</h2><table><thead><tr><th>영역</th><th>순이익 지급</th><th>타이 발생 시</th></tr></thead><tbody><tr><td>플레이어</td><td>1 : 1</td><td>원금 반환</td></tr><tr><td>뱅커</td><td>1 : 0.95 (5% 수수료)</td><td>원금 반환</td></tr><tr><td>타이</td><td>8 : 1</td><td>배팅액의 9배 반환</td></tr></tbody></table><p class="note">사진의 테이블과 정산 방식이 다를 수 있습니다. 이 시뮬레이터는 요청한 1대0.95 뱅커 지급률을 적용합니다. 페어는 기록만 집계하며 배팅은 지원하지 않습니다.</p><h2>카드 규칙</h2><p>A는 1점, 2~9는 숫자 값, 10·J·Q·K는 0점이며 합계의 일의 자리를 사용합니다. 초기 8·9점은 내추럴로 추가 배분을 하지 않습니다. 그 외에는 표준 플레이어·뱅커 세 번째 카드 규칙에 따라 자동 배분합니다.</p><p class="note">8덱을 섞고 첫 카드와 해당 값만큼의 카드를 번합니다. 남은 카드가 14장 이하이면 다음 판부터 새 슈로 전환합니다.</p><h2>기록판 읽기</h2><p>대로드의 파랑은 플레이어, 빨강은 뱅커입니다. 타이는 마지막 결과에 초록 사선으로 표시됩니다. 분홍·보라 점은 페어입니다. 같은 승자가 이어지면 아래로, 승자가 바뀌면 새 열로 이동합니다. 하단 세 로드는 빅아이·스몰·코크로치로, 과거 결과의 규칙성을 빨강과 파랑으로 나타냅니다. 미래 승패를 예측하는 표시가 아닙니다.</p><h2>단축키와 데이터</h2><p>숫자 1~4: 칩 선택 · Enter: 게임 시작 · Esc: 창 닫기.<br>기록은 이 기기에 자동 저장되며 최근 2,000판은 CSV로 내보낼 수 있습니다. 시뮬레이션은 테이블 데이터와 별도로 실행됩니다.</p><p class="note">카드 규칙 참고: <a href="https://assets.contentstack.io/v3/assets/bltc6ce635bc4868eb2/bltd134a58a42453532/mgm-national-harbor-casino-table-games-baccarat-royal-9.pdf" target="_blank" rel="noopener noreferrer">MGM National Harbor Baccarat Gaming Guide</a>. 로고·상표·사진 자산은 사용하지 않았습니다.</p>`);
+}
+
+$$('.bet-zone').forEach((button) => button.addEventListener('click', () => addBet(button.dataset.side)));
+$$('.casino-chip').forEach((button) => button.addEventListener('click', () => selectChip(Number(button.dataset.chip))));
+$('#undo-button').onclick = () => {
+  if (phase !== 'betting' || !betSteps.length) return;
+  Object.assign(session, betSteps.pop()); persist(); renderWallet(); renderControls(); renderWagers();
+};
+$('#clear-button').onclick = () => {
+  if (phase !== 'betting' || !totalBet(session.bets)) return;
+  betSteps.push({ balance: session.balance, bets: { ...session.bets } });
+  session.balance += totalBet(session.bets); session.bets = emptyBets(); persist(); renderWallet(); renderControls(); renderWagers();
+};
+$('#double-button').onclick = () => {
+  const stake = totalBet(session.bets);
+  if (phase !== 'betting' || !stake || session.balance < stake) return;
+  betSteps.push({ balance: session.balance, bets: { ...session.bets } });
+  session.balance -= stake;
+  for (const side of SIDES) session.bets[side] *= 2;
+  persist(); renderWallet(); renderControls(); renderWagers(); playSound();
+};
+$('#repeat-button').onclick = () => {
+  const amount = totalBet(session.lastBets), available = session.balance + totalBet(session.bets);
+  if (phase !== 'betting' || !amount || amount > available) return;
+  betSteps.push({ balance: session.balance, bets: { ...session.bets } });
+  session.balance = available - amount; session.bets = { ...session.lastBets };
+  persist(); renderWallet(); renderControls(); renderWagers(); playSound();
+};
+$('#deal-button').onclick = startRound;
+$('#history-button').onclick = () => showHistory();
+$('#stats-button').onclick = showStats;
+$('#simulation-button').onclick = showSimulation;
+$('#settings-button').onclick = showSettings;
+$('#help-button').onclick = showHelp;
+$('#close-dialog').onclick = () => $('#panel-dialog').close();
+$('#panel-dialog').addEventListener('close', () => { cancelSimulation = true; });
+$('#panel-dialog').addEventListener('click', (event) => {
+  if (event.target !== $('#panel-dialog')) return;
+  const bounds = $('#panel-dialog').getBoundingClientRect();
+  if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) $('#panel-dialog').close();
+});
+$('#fullscreen-button').onclick = async () => {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await document.documentElement.requestFullscreen();
+  } catch { toast('이 브라우저에서는 전체 화면을 사용할 수 없습니다.'); }
+};
+document.addEventListener('keydown', (event) => {
+  if ($('#panel-dialog').open || ['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON', 'A'].includes(event.target.tagName) || event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
+  if (['1', '2', '3', '4'].includes(event.key)) selectChip(CHIP_VALUES[Number(event.key) - 1]);
+  if (event.key === 'Enter') { event.preventDefault(); startRound(); }
+});
+// A second tab must not overwrite a newer bankroll while this tab is mid-deal.
+window.addEventListener('storage', (event) => {
+  if (event.key !== STORAGE_KEY) return;
+  toast('다른 탭에서 기록이 변경되었습니다. 이 탭을 새로고침해 최신 기록을 불러오세요.');
+  $$('.bet-zone, .casino-chip, .play-controls button, .utility-actions button').forEach((button) => { button.disabled = true; });
+  // Block stale mutations for the rest of this tab's life; reload restores consistency.
+  document.addEventListener('click', blockStaleClick, true);
+  document.addEventListener('keydown', blockStaleClick, true);
+});
+function blockStaleClick(event) {
+  if (event.type === 'keydown' && (event.key === 'F5' || ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'r'))) return;
+  event.preventDefault(); event.stopImmediatePropagation(); toast('다른 탭의 최신 기록을 불러오려면 이 탭을 새로고침해주세요.');
+}
+
+new ResizeObserver(() => renderRoads()).observe($('.roads'));
+renderAll(); persist();
+if (loaded.warning) toast(loaded.warning);
+
+});</script>
+</head>
+<body>
+  <main class="machine" id="machine">
+    <header class="machine-header">
+      <a class="wordmark" href="" aria-label="바카라 테이블 홈"><span class="brand-symbol" aria-hidden="true">♠</span><span>BACCARAT<small>THE VIRTUAL TABLE</small></span></a>
+      <div class="live-status" role="status" aria-live="polite"><span class="status-dot"></span><span id="status-text">배팅하십시오</span><small id="status-detail">칩을 선택하고 테이블을 터치하세요</small></div>
+      <div class="header-meta"><span class="virtual-tag">VIRTUAL PLAY</span><span class="table-id">TABLE <b>01</b></span><button class="icon-button" id="help-button" aria-label="게임 안내">?</button></div>
+    </header>
+
+    <section class="scoreboard" aria-label="현재 슈 결과 기록판">
+      <aside class="score-totals">
+        <div class="score-heading"><span>슈 기록</span><span id="shoe-label">SHOE 001</span></div>
+        <div class="score-row"><span class="stat-icon player-stat">P</span><span>플레이어</span><strong id="count-player">0</strong></div>
+        <div class="score-row"><span class="stat-icon banker-stat">B</span><span>뱅커</span><strong id="count-banker">0</strong></div>
+        <div class="score-row"><span class="stat-icon tie-stat">T</span><span>타이</span><strong id="count-tie">0</strong></div>
+        <div class="score-row"><span class="stat-icon player-pair-stat">P·P</span><span>플레이어 페어</span><strong id="count-playerPair">0</strong></div>
+        <div class="score-row"><span class="stat-icon banker-pair-stat">B·P</span><span>뱅커 페어</span><strong id="count-bankerPair">0</strong></div>
+        <div class="score-total"><span>총 게임</span><strong id="count-rounds">0</strong><span class="round-unit">ROUNDS</span></div>
+      </aside>
+      <div class="roads">
+        <div class="road-panel big-road-panel"><div class="road-caption"><span>BIG ROAD <span class="caption-ko">대로드</span></span><span class="road-legend"><i class="legend-ring blue"></i>플레이어 <i class="legend-ring red"></i>뱅커 <i class="legend-tie"></i>타이</span></div><div class="road-grid big-road" id="big-road" role="img" aria-label="대로드: 기록 없음"></div></div>
+        <div class="derived-roads">
+          <div class="road-panel"><div class="road-caption"><span>BIG EYE BOY <span class="caption-ko">빅아이</span></span><span class="road-type">◎</span></div><div class="road-grid mini-road" id="eye-road" role="img" aria-label="빅아이 로드: 기록 없음"></div></div>
+          <div class="road-panel"><div class="road-caption"><span>SMALL ROAD <span class="caption-ko">스몰로드</span></span><span class="road-type">●</span></div><div class="road-grid mini-road" id="small-road" role="img" aria-label="스몰 로드: 기록 없음"></div></div>
+          <div class="road-panel"><div class="road-caption"><span>COCKROACH <span class="caption-ko">코크로치</span></span><span class="road-type">╱</span></div><div class="road-grid mini-road" id="roach-road" role="img" aria-label="코크로치 로드: 기록 없음"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="felt" aria-label="바카라 배팅 테이블">
+      <svg class="table-lines" viewBox="0 0 1600 520" preserveAspectRatio="none" aria-hidden="true"><path d="M-80 4 Q800 164 1680 4"/><path d="M-80 42 Q800 210 1680 42"/><path d="M-80 430 Q800 586 1680 430"/></svg>
+      <div class="felt-side-note left-note"><span>♠</span><b>BACCARAT</b><small>COMMISSION TABLE</small></div>
+      <div class="felt-side-note right-note"><span>8</span><b>DECK SHOE</b><small>PLAYER · TIE · BANKER</small></div>
+      <div class="table-center">
+        <div class="pair-row"><button class="pair-zone player-pair" disabled><span>플레이어 페어</span><small>11대1 · 배팅 미지원</small></button><div class="table-ornament" aria-hidden="true">― ⟡ ―</div><button class="pair-zone banker-pair" disabled><span>뱅커 페어</span><small>11대1 · 배팅 미지원</small></button></div>
+        <div class="betting-zones">
+          <button class="bet-zone player-zone" id="bet-player" data-side="player" aria-label="플레이어에 선택한 칩 배팅">
+            <span class="zone-surface"></span><span class="zone-heading"><span class="zone-en">PLAYER</span><strong>플레이어</strong></span>
+            <span class="hand" id="hand-player" aria-label="플레이어 카드"></span><span class="hand-score" id="score-player"></span>
+            <span class="wager" id="wager-player"></span><span class="payout">1대1 지급</span><span class="winner-tag">WINNER</span>
+          </button>
+          <button class="bet-zone tie-zone" id="bet-tie" data-side="tie" aria-label="타이에 선택한 칩 배팅">
+            <span class="zone-surface"></span><span class="zone-heading"><span class="zone-en">TIE</span><strong>타이</strong></span>
+            <span class="tie-emblem" id="tie-emblem" aria-hidden="true">8 : 1</span><span class="wager" id="wager-tie"></span><span class="payout">8대1 지급</span><span class="winner-tag">TIE</span>
+          </button>
+          <button class="bet-zone banker-zone" id="bet-banker" data-side="banker" aria-label="뱅커에 선택한 칩 배팅">
+            <span class="zone-surface"></span><span class="zone-heading"><span class="zone-en">BANKER</span><strong>뱅커</strong></span>
+            <span class="hand" id="hand-banker" aria-label="뱅커 카드"></span><span class="hand-score" id="score-banker"></span>
+            <span class="wager" id="wager-banker"></span><span class="payout">1대0.95 지급</span><span class="winner-tag">WINNER</span>
+          </button>
+        </div>
+      </div>
+      <div class="table-footnote"><span>가상 칩 전용 · 현금 가치 없음</span><span id="deck-info">8 DECKS · STANDARD BACCARAT</span><span>최소 배팅 ₩1,000</span></div>
+    </section>
+
+    <footer class="console">
+      <div class="balance-panel"><div class="balance-label"><span>보유 가상 금액</span><span class="bet-availability" id="bet-availability">배팅 가능</span></div><strong class="balance-amount" id="balance">₩1,000,000</strong><div class="money-details"><div><span>총 배팅 금액</span><strong id="total-bet">₩0</strong></div><div><span>직전 게임 손익</span><strong id="last-profit">₩0</strong></div></div></div>
+      <div class="chip-tray"><div class="tray-caption"><span>SELECT YOUR CHIP</span><span id="selected-chip-label">선택한 칩 ₩1,000</span></div><div class="chips" role="group" aria-label="배팅 칩 선택">
+        <button class="casino-chip chip-1000 selected" data-chip="1000" aria-label="1,000원 칩 선택" aria-pressed="true"><span class="chip-face"><small>VIRTUAL CHIP</small><strong>₩1,000</strong><span>♠</span></span></button>
+        <button class="casino-chip chip-5000" data-chip="5000" aria-label="5,000원 칩 선택" aria-pressed="false"><span class="chip-face"><small>VIRTUAL CHIP</small><strong>₩5,000</strong><span>♠</span></span></button>
+        <button class="casino-chip chip-10000" data-chip="10000" aria-label="10,000원 칩 선택" aria-pressed="false"><span class="chip-face"><small>VIRTUAL CHIP</small><strong>₩10,000</strong><span>♠</span></span></button>
+        <button class="casino-chip chip-100000" data-chip="100000" aria-label="100,000원 칩 선택" aria-pressed="false"><span class="chip-face"><small>VIRTUAL CHIP</small><strong>₩100,000</strong><span>♠</span></span></button>
+      </div></div>
+      <div class="play-controls"><div class="bet-tools"><button id="undo-button" title="마지막 배팅 취소"><span aria-hidden="true">↶</span> 되돌리기</button><button id="clear-button">배팅 취소</button><button id="double-button">×2</button></div><button class="deal-button" id="deal-button"><span>게임 시작</span><span aria-hidden="true">→</span></button><button class="repeat-button" id="repeat-button"><span aria-hidden="true">↻</span> 이전 배팅 반복</button></div>
+      <nav class="utility-bar" aria-label="테이블 도구"><div class="utility-left"><span class="connection-dot"></span><span id="save-indicator">이 기기에 자동 저장</span><span class="utility-separator">/</span><span id="round-label">ROUND 000</span></div><div class="utility-actions"><button id="history-button"><span aria-hidden="true">▤</span> 게임 기록</button><button id="stats-button"><span aria-hidden="true">▥</span> 통계</button><button id="simulation-button"><span aria-hidden="true">▷</span> 시뮬레이션</button><button id="settings-button"><span aria-hidden="true">⚙</span> 설정</button><button id="fullscreen-button" aria-label="전체 화면" title="전체 화면">⛶</button></div></nav>
+    </footer>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <dialog id="panel-dialog" class="panel-dialog"><div class="dialog-header"><div><span class="eyebrow" id="dialog-eyebrow">TABLE 01</span><h1 id="dialog-title">게임 기록</h1></div><button class="close-button" id="close-dialog" aria-label="닫기">×</button></div><div id="dialog-body" class="dialog-body"></div></dialog>
+  <noscript>이 시뮬레이터를 사용하려면 브라우저의 JavaScript를 켜주세요.</noscript>
+</body>
+</html>
