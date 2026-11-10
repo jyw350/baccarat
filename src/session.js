@@ -44,8 +44,8 @@ export function saveSession(storage, session) {
 }
 
 // Complete settlement once, before visual animation starts. Reloading cannot pay twice.
-export function playRound(session, now = new Date().toISOString()) {
-  if (!totalBet(session.bets)) throw new Error('먼저 배팅할 영역을 선택해주세요.');
+export function playRound(session, now = new Date().toISOString(), allowEmpty = false) {
+  if (!allowEmpty && !totalBet(session.bets)) throw new Error('먼저 배팅할 영역을 선택해주세요.');
   if (session.shoe.length <= 14) {
     session.shoe = prepareShoe(); session.shoeNumber++;
   }
@@ -55,7 +55,7 @@ export function playRound(session, now = new Date().toISOString()) {
     id: ++session.roundNumber, shoeNumber: session.shoeNumber, time: now };
   session.balance += settlement.returned;
   session.lastProfit = settlement.profit;
-  session.lastBets = { ...session.bets };
+  if (settlement.stake) session.lastBets = { ...session.bets };
   session.bets = emptyBets();
   session.history.push(record);
   if (session.history.length > 2000) session.history.splice(0, session.history.length - 2000);

@@ -55,3 +55,22 @@ test('history retention caps details at 2,000 without truncating cumulative tota
   assert.equal(s.totals.player + s.totals.banker + s.totals.tie, 2005);
   assert.equal(s.history[0].id, 6); assert.equal(validateSession(s), true);
 });
+
+
+test('automatic observation round records results without changing bankroll', () => {
+  const s = newSession();
+  const before = s.balance;
+  const record = playRound(s, new Date().toISOString(), true);
+  assert.equal(record.stake, 0); assert.equal(record.profit, 0);
+  assert.equal(s.balance, before); assert.equal(s.history.length, 1);
+  assert.equal(s.totals.rounds, 1); assert.equal(validateSession(s), true);
+});
+test('observation round preserves last manual wager without automatically repeating it', () => {
+  const s = newSession();
+  Object.assign(s, placeBet(s.balance, s.bets, 'banker', 5000));
+  playRound(s);
+  const before = s.balance;
+  for (let i = 0; i < 3; i++) playRound(s, new Date().toISOString(), true);
+  assert.equal(s.balance, before); assert.equal(totalBet(s.bets), 0);
+  assert.equal(s.lastBets.banker, 5000); assert.equal(s.totals.wagered, 5000);
+});

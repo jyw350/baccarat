@@ -15,7 +15,8 @@ let storage;
 try { storage = window.localStorage; } catch { storage = { getItem: () => null, setItem: () => { throw new Error('Storage unavailable'); } }; }
 const loaded = loadSession(storage);
 let session = loaded.session;
-let phase = 'betting', betSteps = [], activeRecord = null, resultTimer, toastTimer;
+let running = false, bettingDeadline = 0, bettingTimer, lifecycle = 0;
+let phase = 'idle', betSteps = [], activeRecord = null, resultTimer, toastTimer;
 let displayedBalance = session.balance, displayedProfit = session.lastProfit;
 let simulationRunning = false, cancelSimulation = false, lastSimulation = null;
 let audioContext;
@@ -104,7 +105,7 @@ function renderWallet() {
   const profit = dealing ? displayedProfit : session.lastProfit;
   $('#last-profit').textContent = signedMoney(profit);
   $('#last-profit').className = profit > 0 ? 'positive' : profit < 0 ? 'negative' : '';
-  $('#bet-availability').textContent = phase === 'betting' ? (session.balance >= 1000 ? '배팅 가능' : '잔액 부족') : phase === 'dealing' ? '배팅 마감' : '정산 완료';
+  $('#bet-availability').textContent = phase === 'idle' ? '시작 대기' : phase === 'betting' ? (session.balance >= 1000 ? '배팅 가능' : '잔액 부족') : phase === 'dealing' ? '배팅 마감' : '정산 완료';
   $('#round-label').textContent = `ROUND ${String(dealing ? session.roundNumber - 1 : session.roundNumber).padStart(3, '0')}`;
   $('#deck-info').textContent = `8 DECKS · ${session.shoe.length} CARDS LEFT`;
 }
@@ -127,9 +128,9 @@ function renderControls() {
   $('#clear-button').disabled = !open || !stake;
   $('#double-button').disabled = !open || !stake || session.balance < stake;
   $('#repeat-button').disabled = !open || !totalBet(session.lastBets) || session.balance + stake < totalBet(session.lastBets);
-  $('#deal-button').disabled = phase === 'dealing' || (open && !stake);
-  $('#deal-button').firstElementChild.textContent = phase === 'dealing' ? '카드 배분 중' : phase === 'result' ? '다음 게임' : '게임 시작';
-  for (const id of ['simulation-button', 'settings-button', 'history-button', 'stats-button']) $(`#${id}`).disabled = phase !== 'betting';
+  $('#deal-button').disabled = running;
+  $('#deal-button').firstElementChild.textContent = phase === 'dealing' ? '카드 배분 중' : phase === 'result' ? '다음 판 준비 중' : running ? '자동 진행 중' : '게임 시작';
+  for (const id of ['simulation-button', 'settings-button', 'history-button', 'stats-button']) $(`#${id}`).disabled = ['settings-button', 'simulation-button'].includes(id) ? running : !['idle', 'betting'].includes(phase);
 }
 
 function renderAll() { renderWallet(); renderControls(); renderWagers(); renderRoads(); }
@@ -143,7 +144,7 @@ function clearTableCards() {
 }
 
 function addBet(side) {
-  if (phase !== 'betting') return;
+  if (!bettingOpen()) return;
   try {
     const next = placeBet(session.balance, session.bets, side, session.selectedChip);
     betSteps.push({ balance: session.balance, bets: { ...session.bets } });
@@ -153,7 +154,7 @@ function addBet(side) {
 }
 
 function selectChip(chip) {
-  if (phase !== 'betting') return;
+  if (!bettingOpen()) return;
   session.selectedChip = chip; persist(); renderControls(); playSound();
 }
 
@@ -162,32 +163,62 @@ function cardMarkup(card) {
   return `<span class="playing-card ${['hearts', 'diamonds'].includes(card.suit) ? 'red-suit' : ''}" role="img" aria-label="${suitNames[card.suit]} ${rank}"><span class="card-corner">${rank}<span>${suit}</span></span><span class="card-center">${suit}</span><span class="card-corner bottom">${rank}<span>${suit}</span></span></span>`;
 }
 
+function bettingOpen() {
+  if (running && phase === 'betting' && Date.now() >= bettingDeadline) tickBetting();
+  return running && phase === 'betting' && Date.now() < bettingDeadline;
+}
+function tickBetting() {
+  if (!running || phase !== 'betting') return;
+  const seconds = Math.max(0, Math.ceil((bettingDeadline - Date.now()) / 1000));
+  setStatus(`배팅하십시오 · ${seconds}초`);
+  $('#deal-button').firstElementChild.textContent = `자동 진행 · ${seconds}초`;
+  if (!seconds) { clearInterval(bettingTimer); void startRound(); }
+}
+function startAutomatic() {
+  if (running || phase !== 'idle') return;
+  running = true;
+  nextRound();
+}
+function stopAutomatic() {
+  running = false; lifecycle++;
+  clearInterval(bettingTimer); clearTimeout(resultTimer);
+  phase = 'idle'; activeRecord = null;
+  clearTableCards(); setStatus('게임 시작을 눌러주세요'); renderAll();
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) tickBetting(); });
+window.addEventListener('pagehide', stopAutomatic);
 function nextRound() {
-  if (phase === 'dealing') return;
+  if (!running || phase === 'dealing') return;
   clearTimeout(resultTimer); phase = 'betting'; activeRecord = null;
-  clearTableCards(); setStatus('배팅하십시오', '칩을 선택하고 테이블을 터치하세요'); renderAll();
+  bettingDeadline = Date.now() + 30000;
+  clearTableCards(); renderAll(); tickBetting();
+  clearInterval(bettingTimer); bettingTimer = setInterval(tickBetting, 100);
   if (session.balance < 1000) toast('가상 잔액이 부족합니다. 설정에서 가상 금액을 충전할 수 있습니다.');
 }
 
 async function startRound() {
-  if (phase === 'result') { nextRound(); return; }
-  if (phase !== 'betting' || !totalBet(session.bets)) return;
+  if (!running || phase !== 'betting' || Date.now() < bettingDeadline) return;
+  const currentLifecycle = lifecycle;
+  clearInterval(bettingTimer);
+  if ($('#panel-dialog').open) $('#panel-dialog').close();
   clearTableCards();
   displayedBalance = session.balance; displayedProfit = session.lastProfit;
   phase = 'dealing';
-  try { activeRecord = playRound(session); }
-  catch (error) { phase = 'betting'; toast(error.message); renderAll(); return; }
+  try { activeRecord = playRound(session, new Date().toISOString(), true); }
+  catch (error) { stopAutomatic(); toast(error.message); return; }
   betSteps = []; persist();
   setStatus('배팅 마감', '카드를 배분하고 있습니다'); renderWallet(); renderControls(); renderWagers();
-  const speed = motionReduced.matches ? 70 : session.settings.fast ? 160 : 470;
+  const speed = motionReduced.matches ? 370 : session.settings.fast ? 460 : 770;
   const hands = { player: [], banker: [] };
   await delay(speed);
+  if (!running || lifecycle !== currentLifecycle) return;
   for (const { side, card } of activeRecord.sequence) {
     hands[side].push(card);
     $(`#hand-${side}`).insertAdjacentHTML('beforeend', cardMarkup(card));
     $(`#score-${side}`).textContent = handTotal(hands[side]);
     playSound('card');
     await delay(speed);
+    if (!running || lifecycle !== currentLifecycle) return;
   }
   phase = 'result';
   const resultText = activeRecord.winner === 'tie' ? '타이' : `${names[activeRecord.winner]} 승리`;
@@ -286,7 +317,7 @@ async function runSimulation() {
 }
 
 function showSettings() {
-  openPanel('테이블 설정', `<label class="setting-row"><span>빠른 카드 애니메이션<small>카드 배분과 결과 대기 시간을 줄입니다.</small></span><input type="checkbox" id="setting-fast" ${session.settings.fast ? 'checked' : ''}></label><label class="setting-row"><span>테이블 효과음<small>칩 선택, 카드 배분, 결과 알림에 짧은 효과음을 사용합니다.</small></span><input type="checkbox" id="setting-sound" ${session.settings.sound ? 'checked' : ''}></label><div class="setting-row"><span>새 카드 슈<small>현재 배팅을 취소하고 새 8덱 슈를 시작합니다.<br>누적 기록과 통계는 유지됩니다.</small></span><button id="new-shoe" class="secondary-button">새 슈</button></div><div class="setting-row"><span>가상 금액 충전<small>현금 가치가 없는 연습용 금액 ₩1,000,000을 추가합니다.</small></span><button id="top-up" class="secondary-button">충전</button></div><h2>데이터 관리</h2><p>기록은 이 브라우저에만 저장됩니다. 다른 기기나 브라우저에는 동기화되지 않습니다.</p><button id="reset-session" class="danger-button">기록과 잔액 초기화</button><div id="reset-confirm"></div>`);
+  openPanel('테이블 설정', `<label class="setting-row"><span>빠른 카드 애니메이션<small>빠른 모드도 이전보다 카드마다 0.3초 느리게 배분합니다.</small></span><input type="checkbox" id="setting-fast" ${session.settings.fast ? 'checked' : ''}></label><label class="setting-row"><span>테이블 효과음<small>칩 선택, 카드 배분, 결과 알림에 짧은 효과음을 사용합니다.</small></span><input type="checkbox" id="setting-sound" ${session.settings.sound ? 'checked' : ''}></label><div class="setting-row"><span>새 카드 슈<small>현재 배팅을 취소하고 새 8덱 슈를 시작합니다.<br>누적 기록과 통계는 유지됩니다.</small></span><button id="new-shoe" class="secondary-button">새 슈</button></div><div class="setting-row"><span>가상 금액 충전<small>현금 가치가 없는 연습용 금액 ₩1,000,000을 추가합니다.</small></span><button id="top-up" class="secondary-button">충전</button></div><h2>데이터 관리</h2><p>기록은 이 브라우저에만 저장됩니다. 다른 기기나 브라우저에는 동기화되지 않습니다.</p><button id="reset-session" class="danger-button">기록과 잔액 초기화</button><div id="reset-confirm"></div>`);
   $('#setting-fast').onchange = (event) => { session.settings.fast = event.target.checked; persist(); };
   $('#setting-sound').onchange = (event) => { session.settings.sound = event.target.checked; persist(); playSound(); };
   $('#new-shoe').onclick = () => {
@@ -307,23 +338,23 @@ function showSettings() {
 }
 
 function showHelp() {
-  openPanel('테이블 이용 안내', `<p>사진 속 전자식 바카라 테이블에서 영감을 받은 개인용 가상 시뮬레이터입니다. 모든 금액은 현금 가치가 없는 가상 칩입니다.</p><h2>플레이 방법</h2><ol><li>하단에서 원하는 금액의 칩을 선택합니다.</li><li>플레이어·타이·뱅커 영역을 누를 때마다 선택한 칩 금액이 추가됩니다.</li><li>게임 시작을 누르면 배팅이 마감되고 카드가 자동 배분됩니다.</li><li>정산 후 다음 판으로 전환됩니다. 이전 배팅 반복으로 같은 금액을 다시 놓을 수 있습니다.</li></ol><h2>표준 커미션 바카라</h2><table><thead><tr><th>영역</th><th>순이익 지급</th><th>타이 발생 시</th></tr></thead><tbody><tr><td>플레이어</td><td>1 : 1</td><td>원금 반환</td></tr><tr><td>뱅커</td><td>1 : 0.95 (5% 수수료)</td><td>원금 반환</td></tr><tr><td>타이</td><td>8 : 1</td><td>배팅액의 9배 반환</td></tr></tbody></table><p class="note">사진의 테이블과 정산 방식이 다를 수 있습니다. 이 시뮬레이터는 요청한 1대0.95 뱅커 지급률을 적용합니다. 페어는 기록만 집계하며 배팅은 지원하지 않습니다.</p><h2>카드 규칙</h2><p>A는 1점, 2~9는 숫자 값, 10·J·Q·K는 0점이며 합계의 일의 자리를 사용합니다. 초기 8·9점은 내추럴로 추가 배분을 하지 않습니다. 그 외에는 표준 플레이어·뱅커 세 번째 카드 규칙에 따라 자동 배분합니다.</p><p class="note">8덱을 섞고 첫 카드와 해당 값만큼의 카드를 번합니다. 남은 카드가 14장 이하이면 다음 판부터 새 슈로 전환합니다.</p><h2>기록판 읽기</h2><p>대로드의 파랑은 플레이어, 빨강은 뱅커입니다. 타이는 마지막 결과에 초록 사선으로 표시됩니다. 분홍·보라 점은 페어입니다. 같은 승자가 이어지면 아래로, 승자가 바뀌면 새 열로 이동합니다. 하단 세 로드는 빅아이·스몰·코크로치로, 과거 결과의 규칙성을 빨강과 파랑으로 나타냅니다. 미래 승패를 예측하는 표시가 아닙니다.</p><h2>단축키와 데이터</h2><p>숫자 1~4: 칩 선택 · Enter: 게임 시작 · Esc: 창 닫기.<br>기록은 이 기기에 자동 저장되며 최근 2,000판은 CSV로 내보낼 수 있습니다. 시뮬레이션은 테이블 데이터와 별도로 실행됩니다.</p><p class="note">카드 규칙 참고: <a href="https://assets.contentstack.io/v3/assets/bltc6ce635bc4868eb2/bltd134a58a42453532/mgm-national-harbor-casino-table-games-baccarat-royal-9.pdf" target="_blank" rel="noopener noreferrer">MGM National Harbor Baccarat Gaming Guide</a>. 로고·상표·사진 자산은 사용하지 않았습니다.</p>`);
+  openPanel('테이블 이용 안내', `<p>사진 속 전자식 바카라 테이블에서 영감을 받은 개인용 가상 시뮬레이터입니다. 모든 금액은 현금 가치가 없는 가상 칩입니다.</p><h2>플레이 방법</h2><ol><li>먼저 게임 시작을 누르고, 30초 안에 하단에서 원하는 금액의 칩을 선택합니다.</li><li>플레이어·타이·뱅커 영역을 누를 때마다 선택한 칩 금액이 추가됩니다.</li><li>게임 시작을 누르면 매 판 30초 배팅 시간이 시작됩니다. 0초에 배팅이 잠기고 카드가 자동 배분됩니다.</li><li>배팅하지 않아도 진행되며 정산 후 다시 30초 배팅을 시작합니다. 창을 닫거나 새로고침하면 자동 진행은 종료됩니다. 직전 배팅은 자동 반복하지 않습니다. 이전 배팅 반복으로 같은 금액을 다시 놓을 수 있습니다.</li></ol><h2>표준 커미션 바카라</h2><table><thead><tr><th>영역</th><th>순이익 지급</th><th>타이 발생 시</th></tr></thead><tbody><tr><td>플레이어</td><td>1 : 1</td><td>원금 반환</td></tr><tr><td>뱅커</td><td>1 : 0.95 (5% 수수료)</td><td>원금 반환</td></tr><tr><td>타이</td><td>8 : 1</td><td>배팅액의 9배 반환</td></tr></tbody></table><p class="note">사진의 테이블과 정산 방식이 다를 수 있습니다. 이 시뮬레이터는 요청한 1대0.95 뱅커 지급률을 적용합니다. 페어는 기록만 집계하며 배팅은 지원하지 않습니다.</p><h2>카드 규칙</h2><p>A는 1점, 2~9는 숫자 값, 10·J·Q·K는 0점이며 합계의 일의 자리를 사용합니다. 초기 8·9점은 내추럴로 추가 배분을 하지 않습니다. 그 외에는 표준 플레이어·뱅커 세 번째 카드 규칙에 따라 자동 배분합니다.</p><p class="note">8덱을 섞고 첫 카드와 해당 값만큼의 카드를 번합니다. 남은 카드가 14장 이하이면 다음 판부터 새 슈로 전환합니다.</p><h2>기록판 읽기</h2><p>대로드의 파랑은 플레이어, 빨강은 뱅커입니다. 타이는 마지막 결과에 초록 사선으로 표시됩니다. 분홍·보라 점은 페어입니다. 같은 승자가 이어지면 아래로, 승자가 바뀌면 새 열로 이동합니다. 하단 세 로드는 빅아이·스몰·코크로치로, 과거 결과의 규칙성을 빨강과 파랑으로 나타냅니다. 미래 승패를 예측하는 표시가 아닙니다.</p><h2>단축키와 데이터</h2><p>숫자 1~4: 칩 선택 · Enter: 게임 시작 · Esc: 창 닫기.<br>기록은 이 기기에 자동 저장되며 최근 2,000판은 CSV로 내보낼 수 있습니다. 시뮬레이션은 테이블 데이터와 별도로 실행됩니다.</p><p class="note">카드 규칙 참고: <a href="https://assets.contentstack.io/v3/assets/bltc6ce635bc4868eb2/bltd134a58a42453532/mgm-national-harbor-casino-table-games-baccarat-royal-9.pdf" target="_blank" rel="noopener noreferrer">MGM National Harbor Baccarat Gaming Guide</a>. 로고·상표·사진 자산은 사용하지 않았습니다.</p>`);
 }
 
 $$('.bet-zone').forEach((button) => button.addEventListener('click', () => addBet(button.dataset.side)));
 $$('.casino-chip').forEach((button) => button.addEventListener('click', () => selectChip(Number(button.dataset.chip))));
 $('#undo-button').onclick = () => {
-  if (phase !== 'betting' || !betSteps.length) return;
+  if (!bettingOpen() || !betSteps.length) return;
   Object.assign(session, betSteps.pop()); persist(); renderWallet(); renderControls(); renderWagers();
 };
 $('#clear-button').onclick = () => {
-  if (phase !== 'betting' || !totalBet(session.bets)) return;
+  if (!bettingOpen() || !totalBet(session.bets)) return;
   betSteps.push({ balance: session.balance, bets: { ...session.bets } });
   session.balance += totalBet(session.bets); session.bets = emptyBets(); persist(); renderWallet(); renderControls(); renderWagers();
 };
 $('#double-button').onclick = () => {
   const stake = totalBet(session.bets);
-  if (phase !== 'betting' || !stake || session.balance < stake) return;
+  if (!bettingOpen() || !stake || session.balance < stake) return;
   betSteps.push({ balance: session.balance, bets: { ...session.bets } });
   session.balance -= stake;
   for (const side of SIDES) session.bets[side] *= 2;
@@ -331,12 +362,12 @@ $('#double-button').onclick = () => {
 };
 $('#repeat-button').onclick = () => {
   const amount = totalBet(session.lastBets), available = session.balance + totalBet(session.bets);
-  if (phase !== 'betting' || !amount || amount > available) return;
+  if (!bettingOpen() || !amount || amount > available) return;
   betSteps.push({ balance: session.balance, bets: { ...session.bets } });
   session.balance = available - amount; session.bets = { ...session.lastBets };
   persist(); renderWallet(); renderControls(); renderWagers(); playSound();
 };
-$('#deal-button').onclick = startRound;
+$('#deal-button').onclick = startAutomatic;
 $('#history-button').onclick = () => showHistory();
 $('#stats-button').onclick = showStats;
 $('#simulation-button').onclick = showSimulation;
@@ -358,11 +389,12 @@ $('#fullscreen-button').onclick = async () => {
 document.addEventListener('keydown', (event) => {
   if ($('#panel-dialog').open || ['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON', 'A'].includes(event.target.tagName) || event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
   if (['1', '2', '3', '4'].includes(event.key)) selectChip(CHIP_VALUES[Number(event.key) - 1]);
-  if (event.key === 'Enter') { event.preventDefault(); startRound(); }
+  if (event.key === 'Enter') { event.preventDefault(); startAutomatic(); }
 });
 // A second tab must not overwrite a newer bankroll while this tab is mid-deal.
 window.addEventListener('storage', (event) => {
   if (event.key !== STORAGE_KEY) return;
+  stopAutomatic();
   toast('다른 탭에서 기록이 변경되었습니다. 이 탭을 새로고침해 최신 기록을 불러오세요.');
   $$('.bet-zone, .casino-chip, .play-controls button, .utility-actions button').forEach((button) => { button.disabled = true; });
   // Block stale mutations for the rest of this tab's life; reload restores consistency.
@@ -375,5 +407,5 @@ function blockStaleClick(event) {
 }
 
 new ResizeObserver(() => renderRoads()).observe($('.roads'));
-renderAll(); persist();
+setStatus('게임 시작을 눌러주세요'); renderAll(); persist();
 if (loaded.warning) toast(loaded.warning);
