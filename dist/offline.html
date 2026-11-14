@@ -2856,7 +2856,8 @@ function renderControls() {
   $('#repeat-button').disabled = !open || !totalBet(session.lastBets) || session.balance + stake < totalBet(session.lastBets);
   $('#deal-button').disabled = running;
   $('#deal-button').firstElementChild.textContent = phase === 'dealing' ? '카드 배분 중' : phase === 'result' ? '다음 판 준비 중' : running ? '자동 진행 중' : '게임 시작';
-  for (const id of ['simulation-button', 'settings-button', 'history-button', 'stats-button']) $(`#${id}`).disabled = ['settings-button', 'simulation-button'].includes(id) ? running : !['idle', 'betting'].includes(phase);
+  $('#settings-button').disabled = false;
+  for (const id of ['simulation-button', 'history-button', 'stats-button']) $(`#${id}`).disabled = id === 'simulation-button' ? running : !['idle', 'betting'].includes(phase);
 }
 
 function renderAll() { renderWallet(); renderControls(); renderWagers(); renderRoads(); }
@@ -3043,8 +3044,11 @@ async function runSimulation() {
 }
 
 function showSettings() {
+  // Cancel the countdown and invalidate pending card animations before any settings mutations.
+  if (running) stopAutomatic();
   openPanel('테이블 설정', `<label class="setting-row"><span>빠른 카드 애니메이션<small>빠른 모드도 이전보다 카드마다 0.3초 느리게 배분합니다.</small></span><input type="checkbox" id="setting-fast" ${session.settings.fast ? 'checked' : ''}></label><label class="setting-row"><span>테이블 효과음<small>칩 선택, 카드 배분, 결과 알림에 짧은 효과음을 사용합니다.</small></span><input type="checkbox" id="setting-sound" ${session.settings.sound ? 'checked' : ''}></label><div class="setting-row"><span>새 카드 슈<small>현재 배팅을 취소하고 새 8덱 슈를 시작합니다.<br>누적 기록과 통계는 유지됩니다.</small></span><button id="new-shoe" class="secondary-button">새 슈</button></div><div class="setting-row"><span>가상 금액 충전<small>현금 가치가 없는 연습용 금액 ₩1,000,000을 추가합니다.</small></span><button id="top-up" class="secondary-button">충전</button></div><h2>데이터 관리</h2><p>기록은 이 브라우저에만 저장됩니다. 다른 기기나 브라우저에는 동기화되지 않습니다.</p><button id="reset-session" class="danger-button">기록과 잔액 초기화</button><div id="reset-confirm"></div>`);
   $('#setting-fast').onchange = (event) => { session.settings.fast = event.target.checked; persist(); };
+  $('#dialog-body').insertAdjacentHTML('afterbegin', '<p class="note">설정을 여는 동안 자동 진행은 중지됩니다. 설정을 닫고 게임 시작을 누르면 15초 배팅부터 다시 진행합니다. 이미 정산된 판의 기록은 유지됩니다.</p>');
   $('#setting-sound').onchange = (event) => { session.settings.sound = event.target.checked; persist(); playSound(); };
   $('#new-shoe').onclick = () => {
     session.balance += totalBet(session.bets); session.bets = emptyBets(); betSteps = [];
@@ -3058,6 +3062,7 @@ function showSettings() {
     $('#reset-confirm').innerHTML = '<p style="margin-top:16px">모든 기록·통계·배팅이 삭제되고 가상 금액이 ₩1,000,000으로 초기화됩니다.</p><button class="danger-button" id="confirm-reset">전체 초기화 확인</button> <button class="secondary-button" id="cancel-reset">취소</button>';
     $('#cancel-reset').onclick = () => $('#reset-confirm').replaceChildren();
     $('#confirm-reset').onclick = () => {
+      stopAutomatic();
       session = newSession(); betSteps = []; lastSimulation = null; clearTableCards(); persist(); renderAll(); $('#panel-dialog').close(); toast('새 세션을 시작했습니다.');
     };
   };
