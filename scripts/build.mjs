@@ -2,6 +2,7 @@ import { mkdir, cp, readFile, writeFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 for (const file of ['src/app.js', 'src/engine.js', 'src/roads.js', 'src/session.js']) {
@@ -26,5 +27,14 @@ const standalone = html.replace('  <link rel="icon" href="./favicon.svg" type="i
   .replace('<script type="module" src="./src/app.js"></script>', () => `<script>document.addEventListener('DOMContentLoaded', () => {\n'use strict';\n${bundled}\n});</script>`)
   .replace('href="./" aria-label="바카라 테이블 홈"', 'href="" aria-label="바카라 테이블 홈"');
 await writeFile(resolve(root, 'dist/offline.html'), standalone);
+
+// Version every asset and module import together so cached engines cannot run with a new UI.
+const version = createHash('sha256').update(html + css + bundled + await readFile(resolve(root, 'favicon.svg'), 'utf8')).digest('hex').slice(0, 12);
+for (const file of ['engine.js', 'roads.js', 'session.js', 'app.js']) {
+  const path = resolve(root, 'dist/src', file);
+  const source = await readFile(path, 'utf8');
+  await writeFile(path, source.replace(/from '(\.\/[^']+\.js)'/g, (_, url) => `from '${url}?v=${version}'`));
+}
+await writeFile(resolve(root, 'dist/index.html'), html.replace(/\.\/(src\/app\.js|src\/styles\.css|favicon\.svg)/g, url => `${url}?v=${version}`));
 console.log('Build successful: dist/ (static HTML, CSS and ES modules; no external dependencies)');
 console.log('Offline edition: dist/offline.html (open directly in a browser)');

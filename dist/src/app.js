@@ -1,6 +1,6 @@
-import { CHIP_VALUES, SIDES, BET_LIMITS, assertBetLimits, validTableBets, replaceBets, emptyBets, totalBet, placeBet, handTotal, prepareShoe, dealRound, settleBets, summarize } from './engine.js';
-import { bigRoad, derivedRoad } from './roads.js';
-import { loadSession, saveSession, newSession, playRound, STORAGE_KEY } from './session.js';
+import { CHIP_VALUES, SIDES, BET_LIMITS, assertBetLimits, validTableBets, replaceBets, emptyBets, totalBet, placeBet, handTotal, prepareShoe, dealRound, settleBets, summarize } from './engine.js?v=169d0f5a6a81';
+import { bigRoad, derivedRoad } from './roads.js?v=169d0f5a6a81';
+import { loadSession, saveSession, newSession, playRound, STORAGE_KEY } from './session.js?v=169d0f5a6a81';
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
