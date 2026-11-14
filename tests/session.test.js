@@ -109,6 +109,16 @@ test('legacy pending wagers outside new limits are refunded without rewriting hi
   assert.equal(loadSession(storage).warning, null);
 });
 
+test('a tied round returns both main wagers and leaves accumulated profit unchanged', () => {
+  const s = newSession(); s.totals.profit = 300000;
+  s.shoe = [...Array.from({ length: 20 }, () => ({ rank: 10, suit: 'clubs' })), ...[4,4,4,4].map(rank => ({rank,suit:'spades'}))];
+  Object.assign(s, placeBet(s.balance, s.bets, 'player', 10000));
+  Object.assign(s, placeBet(s.balance, s.bets, 'banker', 5000));
+  const record = playRound(s);
+  assert.equal(record.winner, 'tie'); assert.equal(record.returned, 15000);
+  assert.equal(s.balance, 1000000); assert.equal(s.totals.profit, 300000);
+});
+
 test('invalid pending wagers are rejected before dealing or changing the shoe', () => {
   const s = newSession(); s.bets.player = 1000;
   const before = JSON.stringify(s);

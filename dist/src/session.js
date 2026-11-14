@@ -1,4 +1,4 @@
-import { INITIAL_BALANCE, CHIP_VALUES, SIDES, BET_LIMITS, assertBetLimits, emptyBets, totalBet, validBets, prepareShoe, dealRound, settleBets, summarize } from './engine.js?v=169d0f5a6a81';
+import { INITIAL_BALANCE, CHIP_VALUES, SIDES, BET_LIMITS, assertBetLimits, emptyBets, totalBet, validBets, prepareShoe, dealRound, settleBets, summarize } from './engine.js?v=7566f29a3747';
 
 export const STORAGE_KEY = 'baccarat-table.session.v1';
 export function newSession() {

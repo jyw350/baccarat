@@ -17,7 +17,7 @@ const loaded = loadSession(storage);
 let session = loaded.session;
 let running = false, bettingDeadline = 0, bettingTimer, lifecycle = 0;
 let phase = 'idle', betSteps = [], activeRecord = null, resultTimer, toastTimer;
-let displayedBalance = session.balance, displayedProfit = session.lastProfit;
+let displayedBalance = session.balance, displayedProfit = session.totals.profit;
 let simulationRunning = false, cancelSimulation = false, lastSimulation = null;
 let audioContext;
 let storageNoticeShown = false;
@@ -102,7 +102,7 @@ function renderWallet() {
   $('#balance').textContent = money(dealing ? displayedBalance : session.balance);
   const bets = phase === 'betting' ? session.bets : activeRecord?.bets || session.bets;
   $('#total-bet').textContent = money(totalBet(bets));
-  const profit = dealing ? displayedProfit : session.lastProfit;
+  const profit = dealing ? displayedProfit : session.totals.profit;
   $('#last-profit').textContent = signedMoney(profit);
   $('#last-profit').className = profit > 0 ? 'positive' : profit < 0 ? 'negative' : '';
   $('#bet-availability').textContent = phase === 'idle' ? '시작 대기' : phase === 'betting' ? (session.balance >= 1000 ? '배팅 가능' : '잔액 부족') : phase === 'dealing' ? '배팅 마감' : '정산 완료';
@@ -214,7 +214,7 @@ async function startRound() {
   clearInterval(bettingTimer);
   if ($('#panel-dialog').open) $('#panel-dialog').close();
   clearTableCards();
-  displayedBalance = session.balance; displayedProfit = session.lastProfit;
+  displayedBalance = session.balance; displayedProfit = session.totals.profit;
   phase = 'dealing';
   try { activeRecord = playRound(session, new Date().toISOString(), true); }
   catch (error) { stopAutomatic(); toast(error.message); return; }

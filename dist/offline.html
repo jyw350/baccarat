@@ -2778,7 +2778,7 @@ const loaded = loadSession(storage);
 let session = loaded.session;
 let running = false, bettingDeadline = 0, bettingTimer, lifecycle = 0;
 let phase = 'idle', betSteps = [], activeRecord = null, resultTimer, toastTimer;
-let displayedBalance = session.balance, displayedProfit = session.lastProfit;
+let displayedBalance = session.balance, displayedProfit = session.totals.profit;
 let simulationRunning = false, cancelSimulation = false, lastSimulation = null;
 let audioContext;
 let storageNoticeShown = false;
@@ -2863,7 +2863,7 @@ function renderWallet() {
   $('#balance').textContent = money(dealing ? displayedBalance : session.balance);
   const bets = phase === 'betting' ? session.bets : activeRecord?.bets || session.bets;
   $('#total-bet').textContent = money(totalBet(bets));
-  const profit = dealing ? displayedProfit : session.lastProfit;
+  const profit = dealing ? displayedProfit : session.totals.profit;
   $('#last-profit').textContent = signedMoney(profit);
   $('#last-profit').className = profit > 0 ? 'positive' : profit < 0 ? 'negative' : '';
   $('#bet-availability').textContent = phase === 'idle' ? '시작 대기' : phase === 'betting' ? (session.balance >= 1000 ? '배팅 가능' : '잔액 부족') : phase === 'dealing' ? '배팅 마감' : '정산 완료';
@@ -2975,7 +2975,7 @@ async function startRound() {
   clearInterval(bettingTimer);
   if ($('#panel-dialog').open) $('#panel-dialog').close();
   clearTableCards();
-  displayedBalance = session.balance; displayedProfit = session.lastProfit;
+  displayedBalance = session.balance; displayedProfit = session.totals.profit;
   phase = 'dealing';
   try { activeRecord = playRound(session, new Date().toISOString(), true); }
   catch (error) { stopAutomatic(); toast(error.message); return; }
@@ -3242,7 +3242,7 @@ if (loaded.warning) toast(loaded.warning);
     </section>
 
     <footer class="console">
-      <div class="balance-panel"><div class="balance-label"><span>보유 가상 금액</span><span class="bet-availability" id="bet-availability">배팅 가능</span></div><strong class="balance-amount" id="balance">₩1,000,000</strong><div class="money-details"><div><span>총 배팅 금액</span><strong id="total-bet">₩0</strong></div><div><span>직전 게임 손익</span><strong id="last-profit">₩0</strong></div></div></div>
+      <div class="balance-panel"><div class="balance-label"><span>보유 가상 금액</span><span class="bet-availability" id="bet-availability">배팅 가능</span></div><strong class="balance-amount" id="balance">₩1,000,000</strong><div class="money-details"><div><span>총 배팅 금액</span><strong id="total-bet">₩0</strong></div><div><span>누적 게임 손익</span><strong id="last-profit">₩0</strong></div></div></div>
       <div class="chip-tray"><div class="tray-caption"><span>SELECT YOUR CHIP</span><span id="selected-chip-label">선택한 칩 ₩5,000</span></div><div class="chips" role="group" aria-label="배팅 칩 선택">
         <button class="casino-chip chip-1000" data-chip="1000" aria-label="1,000원 칩 선택" aria-pressed="false"><span class="chip-face"><small>VIRTUAL CHIP</small><strong>₩1,000</strong><span>♠</span></span></button>
         <button class="casino-chip chip-5000 selected" data-chip="5000" aria-label="5,000원 칩 선택" aria-pressed="true"><span class="chip-face"><small>VIRTUAL CHIP</small><strong>₩5,000</strong><span>♠</span></span></button>

@@ -92,6 +92,20 @@ test('opening settings preserves pending wagers; new shoe refunds them only once
   ui.click('#deal-button'); assert.equal(ui.read('phase'), 'betting');
 });
 
+test('wallet shows cumulative profit, excludes top-ups and pending wagers, and resets to zero', () => {
+  const ui = table();
+  ui.read('session.totals.profit = 300000; session.lastProfit = -5000; renderWallet()');
+  assert.equal(ui.element('#last-profit').textContent, '+₩300,000');
+  ui.click('#settings-button'); ui.click('#top-up');
+  assert.equal(ui.element('#last-profit').textContent, '+₩300,000');
+  ui.click('#close-dialog'); ui.click('#deal-button'); ui.read("addBet('player')");
+  assert.equal(ui.element('#last-profit').textContent, '+₩300,000');
+  ui.read('session.totals.profit = -400000; renderWallet()');
+  assert.equal(ui.element('#last-profit').textContent, '−₩400,000');
+  ui.click('#settings-button'); ui.click('#reset-session'); ui.click('#confirm-reset');
+  assert.equal(ui.element('#last-profit').textContent, '₩0');
+});
+
 test('UI wager actions enforce limits for clicks, double, repeat and undo', () => {
   const ui = table(); ui.click('#deal-button');
   ui.read("selectChip(1000); addBet('player')");
