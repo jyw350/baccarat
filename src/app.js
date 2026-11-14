@@ -1,4 +1,4 @@
-import { CHIP_VALUES, SIDES, emptyBets, totalBet, placeBet, handTotal, prepareShoe, dealRound, settleBets, summarize } from './engine.js';
+import { CHIP_VALUES, SIDES, BET_LIMITS, assertBetLimits, validTableBets, replaceBets, emptyBets, totalBet, placeBet, handTotal, prepareShoe, dealRound, settleBets, summarize } from './engine.js';
 import { bigRoad, derivedRoad } from './roads.js';
 import { loadSession, saveSession, newSession, playRound, STORAGE_KEY } from './session.js';
 
@@ -126,8 +126,8 @@ function renderControls() {
   $('#selected-chip-label').textContent = `선택한 칩 ${money(session.selectedChip)}`;
   $('#undo-button').disabled = !open || !betSteps.length;
   $('#clear-button').disabled = !open || !stake;
-  $('#double-button').disabled = !open || !stake || session.balance < stake;
-  $('#repeat-button').disabled = !open || !totalBet(session.lastBets) || session.balance + stake < totalBet(session.lastBets);
+  $('#double-button').disabled = !open || !stake || session.balance < stake || !validTableBets(doubledBets());
+  $('#repeat-button').disabled = !open || !totalBet(session.lastBets) || session.balance + stake < totalBet(session.lastBets) || !validTableBets(session.lastBets);
   $('#deal-button').disabled = running;
   $('#deal-button').firstElementChild.textContent = phase === 'dealing' ? '카드 배분 중' : phase === 'result' ? '다음 판 준비 중' : running ? '자동 진행 중' : '게임 시작';
   $('#settings-button').disabled = false;
@@ -157,6 +157,17 @@ function addBet(side) {
 function selectChip(chip) {
   if (!bettingOpen()) return;
   session.selectedChip = chip; persist(); renderControls(); playSound();
+}
+
+function doubledBets() { return Object.fromEntries(SIDES.map(side => [side, session.bets[side] * 2])); }
+function updateBets(nextBets) {
+  if (!bettingOpen()) return;
+  try {
+    const next = replaceBets(session.balance, session.bets, nextBets);
+    betSteps.push({ balance: session.balance, bets: { ...session.bets } });
+    Object.assign(session, next);
+    persist(); renderWallet(); renderControls(); renderWagers(); playSound();
+  } catch (error) { toast(error.message); }
 }
 
 function cardMarkup(card) {
@@ -271,15 +282,22 @@ function simulationChart(points) {
 }
 
 function showSimulation() {
-  openPanel('시뮬레이션', `<p>같은 금액을 한 영역에 반복 배팅했을 때의 결과를 확인합니다.<br>테이블 잔액·카드 슈·게임 기록과 분리된 독립 시뮬레이션입니다.</p><form id="simulation-form"><div class="form-row"><label>게임 횟수<select id="sim-rounds"><option value="100">100판</option><option value="1000" selected>1,000판</option><option value="10000">10,000판</option></select></label><label>배팅 영역<select id="sim-side"><option value="banker">뱅커 · 1대0.95</option><option value="player">플레이어 · 1대1</option><option value="tie">타이 · 8대1</option></select></label><label>판당 가상 금액<input id="sim-amount" type="number" min="1000" max="1000000" step="1000" value="1000" required></label></div><div class="form-actions"><button class="primary-button" id="run-simulation" type="submit">시뮬레이션 실행</button><button class="secondary-button" id="cancel-simulation" type="button" hidden>중지</button><span id="sim-progress-label" role="status"></span></div></form><progress id="sim-progress" value="0" max="100" hidden aria-label="시뮬레이션 진행률"></progress><div id="simulation-result">${lastSimulation ? `<h2>직전 시뮬레이션 · ${names[lastSimulation.side]} / ${money(lastSimulation.amount)}</h2>${simulationChart(lastSimulation.points)}${statsMarkup(lastSimulation.totals)}` : ''}</div><p class="note">매 판 고정 금액을 투입하는 모형으로, 자금 소진 제한을 적용하지 않습니다. 무작위 결과이며 다음 게임의 승패를 예측하지 않습니다.</p>`, 'INDEPENDENT SIMULATION');
+  openPanel('시뮬레이션', `<p>같은 금액을 한 영역에 반복 배팅했을 때의 결과를 확인합니다.<br>테이블 잔액·카드 슈·게임 기록과 분리된 독립 시뮬레이션입니다.</p><form id="simulation-form"><div class="form-row"><label>게임 횟수<select id="sim-rounds"><option value="100">100판</option><option value="1000" selected>1,000판</option><option value="10000">10,000판</option></select></label><label>배팅 영역<select id="sim-side"><option value="banker">뱅커 · 6점 승리만 절반 지급</option><option value="player">플레이어 · 1대1</option><option value="tie">타이 · 8대1</option></select></label><label>판당 가상 금액<input id="sim-amount" type="number" min="5000" max="100000" step="1000" value="5000" required></label></div><div class="form-actions"><button class="primary-button" id="run-simulation" type="submit">시뮬레이션 실행</button><button class="secondary-button" id="cancel-simulation" type="button" hidden>중지</button><span id="sim-progress-label" role="status"></span></div></form><progress id="sim-progress" value="0" max="100" hidden aria-label="시뮬레이션 진행률"></progress><div id="simulation-result">${lastSimulation ? `<h2>직전 시뮬레이션 · ${names[lastSimulation.side]} / ${money(lastSimulation.amount)}</h2>${simulationChart(lastSimulation.points)}${statsMarkup(lastSimulation.totals)}` : ''}</div><p class="note">매 판 고정 금액을 투입하는 모형으로, 자금 소진 제한을 적용하지 않습니다. 무작위 결과이며 다음 게임의 승패를 예측하지 않습니다.</p>`, 'INDEPENDENT SIMULATION');
   $('#simulation-form').onsubmit = (event) => { event.preventDefault(); runSimulation(); };
+  $('#sim-side').onchange = () => {
+    const { min, max } = BET_LIMITS[$('#sim-side').value];
+    const input = $('#sim-amount'); input.min = min; input.max = max;
+    input.value = Math.max(min, Math.min(max, Number(input.value) || min));
+  };
   $('#cancel-simulation').onclick = () => { cancelSimulation = true; };
 }
 
 async function runSimulation() {
   if (simulationRunning) return;
   const count = Number($('#sim-rounds').value), side = $('#sim-side').value, amount = Number($('#sim-amount').value);
-  if (![100, 1000, 10000].includes(count) || !SIDES.includes(side) || !Number.isInteger(amount) || amount < 1000 || amount > 1000000 || amount % 1000) { toast('배팅 금액은 1,000~1,000,000원 사이의 1,000원 단위로 입력해주세요.'); return; }
+  if (![100, 1000, 10000].includes(count) || !SIDES.includes(side) || !Number.isInteger(amount) || amount <= 0) { toast('게임 횟수와 배팅 금액을 확인해주세요.'); return; }
+  try { assertBetLimits({ ...emptyBets(), [side]: amount }); }
+  catch (error) { toast(error.message); return; }
   simulationRunning = true; cancelSimulation = false;
   $('#run-simulation').disabled = true; $('#cancel-simulation').hidden = false; $('#sim-progress').hidden = false;
   for (const selector of ['#sim-rounds', '#sim-side', '#sim-amount']) $(selector).disabled = true;
@@ -290,7 +308,7 @@ async function runSimulation() {
     for (let i = 0; i < count; i++) {
       if (cancelSimulation) break;
       if (shoe.length <= 14) shoe = prepareShoe();
-      const result = dealRound(shoe), settlement = settleBets(bets, result.winner);
+      const result = dealRound(shoe), settlement = settleBets(bets, result.winner, result.bankerTotal);
       const delta = summarize([{ ...result, ...settlement }]);
       for (const key of Object.keys(delta)) totals[key] += delta[key];
       completed++;
@@ -343,7 +361,7 @@ function showSettings() {
 }
 
 function showHelp() {
-  openPanel('테이블 이용 안내', `<p>사진 속 전자식 바카라 테이블에서 영감을 받은 개인용 가상 시뮬레이터입니다. 모든 금액은 현금 가치가 없는 가상 칩입니다.</p><h2>플레이 방법</h2><ol><li>먼저 게임 시작을 누르고, 15초 안에 하단에서 원하는 금액의 칩을 선택합니다.</li><li>플레이어·타이·뱅커 영역을 누를 때마다 선택한 칩 금액이 추가됩니다.</li><li>게임 시작을 누르면 매 판 15초 배팅 시간이 시작됩니다. 0초에 배팅이 잠기고 카드가 자동 배분됩니다.</li><li>배팅하지 않아도 진행되며 정산 후 다시 15초 배팅을 시작합니다. 창을 닫거나 새로고침하면 자동 진행은 종료됩니다. 직전 배팅은 자동 반복하지 않습니다. 이전 배팅 반복으로 같은 금액을 다시 놓을 수 있습니다.</li></ol><h2>표준 커미션 바카라</h2><table><thead><tr><th>영역</th><th>순이익 지급</th><th>타이 발생 시</th></tr></thead><tbody><tr><td>플레이어</td><td>1 : 1</td><td>원금 반환</td></tr><tr><td>뱅커</td><td>1 : 0.95 (5% 수수료)</td><td>원금 반환</td></tr><tr><td>타이</td><td>8 : 1</td><td>배팅액의 9배 반환</td></tr></tbody></table><p class="note">사진의 테이블과 정산 방식이 다를 수 있습니다. 이 시뮬레이터는 요청한 1대0.95 뱅커 지급률을 적용합니다. 페어는 기록만 집계하며 배팅은 지원하지 않습니다.</p><h2>카드 규칙</h2><p>A는 1점, 2~9는 숫자 값, 10·J·Q·K는 0점이며 합계의 일의 자리를 사용합니다. 초기 8·9점은 내추럴로 추가 배분을 하지 않습니다. 그 외에는 표준 플레이어·뱅커 세 번째 카드 규칙에 따라 자동 배분합니다.</p><p class="note">8덱을 섞고 첫 카드와 해당 값만큼의 카드를 번합니다. 남은 카드가 14장 이하이면 다음 판부터 새 슈로 전환합니다.</p><h2>기록판 읽기</h2><p>대로드의 파랑은 플레이어, 빨강은 뱅커입니다. 타이는 마지막 결과에 초록 사선으로 표시됩니다. 분홍·보라 점은 페어입니다. 같은 승자가 이어지면 아래로, 승자가 바뀌면 새 열로 이동합니다. 하단 세 로드는 빅아이·스몰·코크로치로, 과거 결과의 규칙성을 빨강과 파랑으로 나타냅니다. 미래 승패를 예측하는 표시가 아닙니다.</p><h2>단축키와 데이터</h2><p>숫자 1~4: 칩 선택 · Enter: 게임 시작 · Esc: 창 닫기.<br>기록은 이 기기에 자동 저장되며 최근 2,000판은 CSV로 내보낼 수 있습니다. 시뮬레이션은 테이블 데이터와 별도로 실행됩니다.</p><p class="note">카드 규칙 참고: <a href="https://assets.contentstack.io/v3/assets/bltc6ce635bc4868eb2/bltd134a58a42453532/mgm-national-harbor-casino-table-games-baccarat-royal-9.pdf" target="_blank" rel="noopener noreferrer">MGM National Harbor Baccarat Gaming Guide</a>. 로고·상표·사진 자산은 사용하지 않았습니다.</p>`);
+  openPanel('테이블 이용 안내', `<p>사진 속 전자식 바카라 테이블에서 영감을 받은 개인용 가상 시뮬레이터입니다. 모든 금액은 현금 가치가 없는 가상 칩입니다.</p><h2>플레이 방법</h2><ol><li>먼저 게임 시작을 누르고, 15초 안에 하단에서 원하는 금액의 칩을 선택합니다.</li><li>플레이어·타이·뱅커 영역을 누를 때마다 선택한 칩 금액이 추가됩니다.</li><li>게임 시작을 누르면 매 판 15초 배팅 시간이 시작됩니다. 0초에 배팅이 잠기고 카드가 자동 배분됩니다.</li><li>배팅하지 않아도 진행되며 정산 후 다시 15초 배팅을 시작합니다. 창을 닫거나 새로고침하면 자동 진행은 종료됩니다. 직전 배팅은 자동 반복하지 않습니다. 이전 배팅 반복으로 같은 금액을 다시 놓을 수 있습니다.</li></ol><h2>뱅커 6점 절반 지급 바카라</h2><p>플레이어·뱅커는 각 영역당 ₩5,000~₩100,000, 타이는 ₩1,000~₩10,000까지 배팅할 수 있습니다. 첫 플레이어·뱅커 배팅은 5,000원 이상 칩을 선택해주세요. 이후에는 1,000원 단위로 추가할 수 있습니다. 두 배·이전 배팅 반복에도 같은 한도가 적용됩니다.</p><table><thead><tr><th>영역</th><th>순이익 지급</th><th>타이 발생 시</th></tr></thead><tbody><tr><td>플레이어</td><td>1 : 1</td><td>원금 반환</td></tr><tr><td>뱅커</td><td>1 : 1 (6점 승리 시 1 : 0.5)</td><td>원금 반환</td></tr><tr><td>타이</td><td>8 : 1</td><td>배팅액의 9배 반환</td></tr></tbody></table><p class="note">뱅커에 10,000원을 배팅하면 6점 승리 시 원금 포함 15,000원, 다른 점수 승리 시 20,000원을 반환합니다. 수수료는 없습니다. 타이 시 플레이어·뱅커 원금은 반환됩니다. 페어는 기록만 집계하며 배팅은 지원하지 않습니다.</p><h2>카드 규칙</h2><p>A는 1점, 2~9는 숫자 값, 10·J·Q·K는 0점이며 합계의 일의 자리를 사용합니다. 초기 8·9점은 내추럴로 추가 배분을 하지 않습니다. 그 외에는 표준 플레이어·뱅커 세 번째 카드 규칙에 따라 자동 배분합니다.</p><p class="note">8덱을 섞고 첫 카드와 해당 값만큼의 카드를 번합니다. 남은 카드가 14장 이하이면 다음 판부터 새 슈로 전환합니다.</p><h2>기록판 읽기</h2><p>대로드의 파랑은 플레이어, 빨강은 뱅커입니다. 타이는 마지막 결과에 초록 사선으로 표시됩니다. 분홍·보라 점은 페어입니다. 같은 승자가 이어지면 아래로, 승자가 바뀌면 새 열로 이동합니다. 하단 세 로드는 빅아이·스몰·코크로치로, 과거 결과의 규칙성을 빨강과 파랑으로 나타냅니다. 미래 승패를 예측하는 표시가 아닙니다.</p><h2>단축키와 데이터</h2><p>숫자 1~4: 칩 선택 · Enter: 게임 시작 · Esc: 창 닫기.<br>기록은 이 기기에 자동 저장되며 최근 2,000판은 CSV로 내보낼 수 있습니다. 시뮬레이션은 테이블 데이터와 별도로 실행됩니다.</p><p class="note">카드 규칙 참고: <a href="https://assets.contentstack.io/v3/assets/bltc6ce635bc4868eb2/bltd134a58a42453532/mgm-national-harbor-casino-table-games-baccarat-royal-9.pdf" target="_blank" rel="noopener noreferrer">MGM National Harbor Baccarat Gaming Guide</a>. 로고·상표·사진 자산은 사용하지 않았습니다.</p>`);
 }
 
 $$('.bet-zone').forEach((button) => button.addEventListener('click', () => addBet(button.dataset.side)));
@@ -358,19 +376,10 @@ $('#clear-button').onclick = () => {
   session.balance += totalBet(session.bets); session.bets = emptyBets(); persist(); renderWallet(); renderControls(); renderWagers();
 };
 $('#double-button').onclick = () => {
-  const stake = totalBet(session.bets);
-  if (!bettingOpen() || !stake || session.balance < stake) return;
-  betSteps.push({ balance: session.balance, bets: { ...session.bets } });
-  session.balance -= stake;
-  for (const side of SIDES) session.bets[side] *= 2;
-  persist(); renderWallet(); renderControls(); renderWagers(); playSound();
+  if (totalBet(session.bets)) updateBets(doubledBets());
 };
 $('#repeat-button').onclick = () => {
-  const amount = totalBet(session.lastBets), available = session.balance + totalBet(session.bets);
-  if (!bettingOpen() || !amount || amount > available) return;
-  betSteps.push({ balance: session.balance, bets: { ...session.bets } });
-  session.balance = available - amount; session.bets = { ...session.lastBets };
-  persist(); renderWallet(); renderControls(); renderWagers(); playSound();
+  if (totalBet(session.lastBets)) updateBets(session.lastBets);
 };
 $('#deal-button').onclick = startAutomatic;
 $('#history-button').onclick = () => showHistory();

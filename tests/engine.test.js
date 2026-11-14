@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createShoe, prepareShoe, handTotal, bankerDraws, dealRound, settleBets, placeBet, totalBet, emptyBets, summarize } from '../src/engine.js';
+import { createShoe, prepareShoe, handTotal, bankerDraws, dealRound, settleBets, placeBet, replaceBets, validTableBets, totalBet, emptyBets, summarize } from '../src/engine.js';
 
 const card = (value, suit = 'spades') => ({ rank: value || 10, suit });
 const shoeFor = (...values) => values.map((value) => typeof value === 'object' ? value : card(value)).reverse();
@@ -62,17 +62,55 @@ test('every combination of initial totals and player third card has valid draws'
   }
 });
 test('a win returns principal plus correct player / banker / tie profit', () => {
-  assert.deepEqual(settleBets({ player: 1000, tie: 0, banker: 0 }, 'player'), { stake: 1000, returned: 2000, profit: 1000 });
-  assert.deepEqual(settleBets({ player: 0, tie: 0, banker: 1000 }, 'banker'), { stake: 1000, returned: 1950, profit: 950 });
+  assert.deepEqual(settleBets({ player: 5000, tie: 0, banker: 0 }, 'player'), { stake: 5000, returned: 10000, profit: 5000 });
+  assert.deepEqual(settleBets({ player: 0, tie: 0, banker: 5000 }, 'banker', 6), { stake: 5000, returned: 7500, profit: 2500 });
   assert.deepEqual(settleBets({ player: 0, tie: 1000, banker: 0 }, 'tie'), { stake: 1000, returned: 9000, profit: 8000 });
 });
 test('tie refunds player and banker bets while paying tie bets', () => {
   assert.deepEqual(settleBets({ player: 5000, tie: 1000, banker: 10000 }, 'tie'), { stake: 16000, returned: 24000, profit: 8000 });
   assert.equal(settleBets({ player: 5000, tie: 0, banker: 10000 }, 'tie').profit, 0);
 });
+
+test('only a banker win on six pays 1.5 times including principal', () => {
+  const bets = { player: 0, tie: 0, banker: 10000 };
+  for (let score = 1; score <= 9; score++) {
+    const result = settleBets(bets, 'banker', score);
+    assert.equal(result.returned, score === 6 ? 15000 : 20000);
+    assert.equal(result.profit, score === 6 ? 5000 : 10000);
+  }
+  assert.equal(settleBets(bets, 'player', 6).returned, 0);
+  assert.equal(settleBets(bets, 'tie', 6).returned, 10000);
+  assert.throws(() => settleBets(bets, 'banker'));
+  assert.throws(() => settleBets(bets, 'banker', 10));
+});
+
+test('per-area minimum and maximum apply to totals, including small chip increments', () => {
+  for (const side of ['player', 'banker']) {
+    assert.throws(() => placeBet(1000000, emptyBets(), side, 1000));
+    const first = placeBet(1000000, emptyBets(), side, 5000);
+    const added = placeBet(first.balance, first.bets, side, 1000);
+    assert.equal(added.bets[side], 6000);
+    const max = placeBet(1000000, emptyBets(), side, 100000);
+    assert.throws(() => placeBet(max.balance, max.bets, side, 1000));
+    assert.equal(max.balance, 900000);
+  }
+  const tie = placeBet(1000000, emptyBets(), 'tie', 10000);
+  assert.throws(() => placeBet(tie.balance, tie.bets, 'tie', 1000));
+  assert.equal(placeBet(1000, emptyBets(), 'tie', 1000).balance, 0);
+  assert.equal(validTableBets({ player: 100000, tie: 10000, banker: 100000 }), true);
+});
+
+test('bulk wager replacement cannot bypass limits or reserve money on rejection', () => {
+  const bets = { player: 10000, tie: 6000, banker: 0 };
+  assert.throws(() => replaceBets(984000, bets, { player: 20000, tie: 12000, banker: 0 }));
+  assert.throws(() => replaceBets(984000, bets, { player: 200000, tie: 0, banker: 0 }));
+  assert.throws(() => replaceBets(0, bets, { player: 100000, tie: 0, banker: 0 }));
+  assert.deepEqual(bets, { player: 10000, tie: 6000, banker: 0 });
+  assert.equal(replaceBets(984000, bets, { player: 0, tie: 0, banker: 5000 }).balance, 995000);
+});
 test('mixed bets subtract all stakes and do not pay losing areas', () => {
-  assert.equal(settleBets({ player: 1000, tie: 1000, banker: 1000 }, 'player').profit, -1000);
-  assert.equal(settleBets({ player: 1000, tie: 1000, banker: 1000 }, 'banker').profit, -1050);
+  assert.equal(settleBets({ player: 5000, tie: 1000, banker: 5000 }, 'player').profit, -1000);
+  assert.equal(settleBets({ player: 5000, tie: 1000, banker: 5000 }, 'banker', 6).profit, -3500);
 });
 test('placing a bet reserves money exactly once and preserves original objects', () => {
   const bets = emptyBets();

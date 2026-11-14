@@ -1,7 +1,8 @@
-// UI-independent, standard commission baccarat. All money is integer virtual KRW.
+// UI-independent baccarat: banker six pays half profit, other banker wins pay even money.
 export const SIDES = ['player', 'tie', 'banker'];
 export const CHIP_VALUES = [1000, 5000, 10000, 100000];
 export const INITIAL_BALANCE = 1000000;
+export const BET_LIMITS = { player: { min: 5000, max: 100000 }, tie: { min: 1000, max: 10000 }, banker: { min: 5000, max: 100000 } };
 export const emptyBets = () => ({ player: 0, tie: 0, banker: 0 });
 export const totalBet = (bets) => SIDES.reduce((sum, side) => sum + bets[side], 0);
 export const cardValue = (card) => Math.min(card.rank, 10) % 10;
@@ -76,19 +77,44 @@ export function validBets(bets) {
   return bets && SIDES.every((side) => Number.isSafeInteger(bets[side]) && bets[side] >= 0 && bets[side] % 1000 === 0);
 }
 
-export function placeBet(balance, bets, side, amount) {
-  if (!SIDES.includes(side) || !CHIP_VALUES.includes(amount) || !validBets(bets)) throw new Error('Invalid bet');
-  if (balance < amount) throw new Error('가상 잔액이 부족합니다.');
-  return { balance: balance - amount, bets: { ...bets, [side]: bets[side] + amount } };
+// Stored historical wagers may predate these limits; validate new wagers separately.
+export function validTableBets(bets) {
+  return validBets(bets) && SIDES.every(side => bets[side] === 0 || (bets[side] >= BET_LIMITS[side].min && bets[side] <= BET_LIMITS[side].max));
 }
 
-export function settleBets(bets, winner) {
+export function assertBetLimits(bets) {
+  if (!validBets(bets)) throw new Error('배팅 금액은 1,000원 단위로 입력해주세요.');
+  for (const side of SIDES) {
+    const { min, max } = BET_LIMITS[side];
+    if (bets[side] && (bets[side] < min || bets[side] > max)) {
+      const name = { player: '플레이어', tie: '타이', banker: '뱅커' }[side];
+      throw new Error(`${name} 배팅은 영역당 ${min.toLocaleString('ko-KR')}~${max.toLocaleString('ko-KR')}원입니다.`);
+    }
+  }
+}
+
+export function replaceBets(balance, bets, nextBets) {
+  if (!Number.isSafeInteger(balance) || balance < 0 || !validBets(bets)) throw new Error('Invalid bet');
+  assertBetLimits(nextBets);
+  const available = balance + totalBet(bets), stake = totalBet(nextBets);
+  if (available < stake) throw new Error('가상 잔액이 부족합니다.');
+  return { balance: available - stake, bets: { ...nextBets } };
+}
+
+export function placeBet(balance, bets, side, amount) {
+  if (!SIDES.includes(side) || !CHIP_VALUES.includes(amount) || !validBets(bets)) throw new Error('Invalid bet');
+  return replaceBets(balance, bets, { ...bets, [side]: bets[side] + amount });
+}
+
+export function settleBets(bets, winner, bankerTotal) {
   if (!validBets(bets) || !SIDES.includes(winner)) throw new Error('Invalid settlement');
+  assertBetLimits(bets);
+  if (winner === 'banker' && (!Number.isInteger(bankerTotal) || bankerTotal < 0 || bankerTotal > 9)) throw new Error('Banker total is required for settlement');
   const stake = totalBet(bets);
   let returned = 0;
   if (winner === 'tie') returned = bets.player + bets.banker + bets.tie * 9;
   if (winner === 'player') returned = bets.player * 2;
-  if (winner === 'banker') returned = bets.banker + bets.banker * 95 / 100;
+  if (winner === 'banker') returned = bets.banker * (bankerTotal === 6 ? 1.5 : 2);
   return { stake, returned, profit: returned - stake };
 }
 

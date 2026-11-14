@@ -80,8 +80,8 @@ for (const [phase, elapsed] of [['betting', 0], ['dealing', 16000], ['result', 2
 test('opening settings preserves pending wagers; new shoe refunds them only once', async () => {
   const ui = table(); ui.click('#deal-button'); ui.read("addBet('player')");
   ui.click('#settings-button'); await ui.advance(30000);
-  assert.equal(ui.read('session.balance'), 999000);
-  assert.equal(ui.read('session.bets.player'), 1000);
+  assert.equal(ui.read('session.balance'), 995000);
+  assert.equal(ui.read('session.bets.player'), 5000);
   assert.equal(ui.read('session.history.length'), 0);
   ui.click('#new-shoe'); ui.click('#new-shoe');
   assert.equal(ui.read('session.balance'), 1000000);
@@ -90,4 +90,45 @@ test('opening settings preserves pending wagers; new shoe refunds them only once
   ui.click('#reset-session'); ui.click('#cancel-reset'); ui.click('#close-dialog');
   assert.equal(ui.read('session.balance'), 2000000);
   ui.click('#deal-button'); assert.equal(ui.read('phase'), 'betting');
+});
+
+test('UI wager actions enforce limits for clicks, double, repeat and undo', () => {
+  const ui = table(); ui.click('#deal-button');
+  ui.read("selectChip(1000); addBet('player')");
+  assert.equal(ui.read('session.balance'), 1000000);
+  ui.read("selectChip(5000); addBet('player')");
+  ui.click('#double-button'); assert.equal(ui.read('session.bets.player'), 10000);
+  ui.click('#undo-button'); assert.equal(ui.read('session.bets.player'), 5000);
+  ui.read("selectChip(10000); addBet('tie'); addBet('tie')");
+  assert.equal(ui.read('session.bets.tie'), 10000);
+  assert.equal(ui.read('session.balance'), 985000);
+  assert.equal(ui.element('#double-button').disabled, true);
+  ui.element('#double-button').onclick(); // Handler must reject even without the disabled UI.
+  assert.equal(ui.read('session.balance'), 985000);
+  assert.equal(ui.read('session.bets.player'), 5000);
+  ui.read('session.lastBets = {player:200000, tie:0, banker:0}; renderControls()');
+  assert.equal(ui.element('#repeat-button').disabled, true);
+  ui.element('#repeat-button').onclick();
+  assert.equal(ui.read('session.balance'), 985000);
+  ui.read('session.lastBets = {player:0, tie:0, banker:100000}; renderControls()');
+  ui.click('#repeat-button'); assert.equal(ui.read('session.balance'), 900000);
+  ui.click('#undo-button'); assert.equal(ui.read('session.balance'), 985000);
+  ui.click('#clear-button'); assert.equal(ui.read('session.balance'), 1000000);
+});
+
+test('independent simulation enforces limits and passes the banker final score to settlement', async () => {
+  const ui = table();
+  ui.element('#sim-rounds').value = '100'; ui.element('#sim-side').value = 'tie';
+  ui.element('#sim-amount').value = '11000';
+  await ui.read('runSimulation()');
+  assert.equal(ui.read('lastSimulation'), null);
+  ui.element('#sim-side').value = 'banker'; ui.element('#sim-amount').value = '1000';
+  await ui.read('runSimulation()'); assert.equal(ui.read('lastSimulation'), null);
+  ui.element('#sim-amount').value = '10000';
+  ui.read("dealRound = () => ({winner:'banker', bankerTotal:6, playerPair:false, bankerPair:false})");
+  const finished = ui.read('runSimulation()'); await ui.advance(12); await finished;
+  assert.equal(ui.read('lastSimulation.totals.profit'), 500000);
+  assert.equal(ui.read('lastSimulation.totals.wagered'), 1000000);
+  assert.equal(ui.read('session.balance'), 1000000);
+  assert.equal(ui.read('session.history.length'), 0);
 });

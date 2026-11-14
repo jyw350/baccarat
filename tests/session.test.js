@@ -26,7 +26,7 @@ test('unplayed bets and reserved bankroll survive a reload', () => {
 });
 test('cut-card threshold starts a new shoe and preserves accumulated history', () => {
   const s = newSession(); s.shoe = s.shoe.slice(0, 14);
-  Object.assign(s, placeBet(s.balance, s.bets, 'player', 1000));
+  Object.assign(s, placeBet(s.balance, s.bets, 'player', 5000));
   const round = playRound(s);
   assert.equal(s.shoeNumber, 2); assert.equal(round.shoeNumber, 2); assert.equal(s.history.length, 1); assert.ok(s.shoe.length > 390);
 });
@@ -47,8 +47,8 @@ test('storage failures are surfaced without throwing away in-memory progress', (
 test('history retention caps details at 2,000 without truncating cumulative totals', () => {
   const s = newSession();
   for (let i = 0; i < 2005; i++) {
-    s.balance += 1000;
-    Object.assign(s, placeBet(s.balance, s.bets, 'player', 1000));
+    s.balance += 5000;
+    Object.assign(s, placeBet(s.balance, s.bets, 'player', 5000));
     playRound(s);
   }
   assert.equal(s.history.length, 2000); assert.equal(s.totals.rounds, 2005);
@@ -73,4 +73,45 @@ test('observation round preserves last manual wager without automatically repeat
   for (let i = 0; i < 3; i++) playRound(s, new Date().toISOString(), true);
   assert.equal(s.balance, before); assert.equal(totalBet(s.bets), 0);
   assert.equal(s.lastBets.banker, 5000); assert.equal(s.totals.wagered, 5000);
+});
+
+test('two-card and three-card banker six wins settle and persist half profit', () => {
+  for (const ranks of [[2, 3, 2, 3, 1], [2, 1, 2, 1, 10, 4]]) {
+    const s = newSession(), storage = memory();
+    s.shoe = [...Array.from({ length: 20 }, () => ({ rank: 10, suit: 'clubs' })), ...ranks.map(rank => ({ rank, suit: 'spades' })).reverse()];
+    Object.assign(s, placeBet(s.balance, s.bets, 'banker', 10000));
+    const record = playRound(s);
+    assert.equal(record.winner, 'banker'); assert.equal(record.bankerTotal, 6);
+    assert.equal(record.banker.length, ranks.length === 5 ? 2 : 3);
+    assert.equal(record.returned, 15000); assert.equal(s.balance, 1005000);
+    assert.equal(s.totals.profit, 5000); saveSession(storage, s);
+    assert.equal(loadSession(storage).session.balance, 1005000);
+  }
+});
+
+test('legacy pending wagers outside new limits are refunded without rewriting history', () => {
+  const s = newSession(), storage = memory();
+  Object.assign(s, placeBet(s.balance, s.bets, 'banker', 5000)); playRound(s);
+  // A prior commission-era record is preserved exactly, including smaller wagers.
+  Object.assign(s.history[0], { bets: { player: 0, tie: 0, banker: 1000 }, stake: 1000, returned: 1950, profit: 950 });
+  const history = JSON.stringify(s.history), totals = JSON.stringify(s.totals);
+  s.bets = { player: 1000, tie: 20000, banker: 5000 }; s.balance -= 26000;
+  s.lastBets = { player: 200000, tie: 0, banker: 0 };
+  saveSession(storage, s);
+  const loaded = loadSession(storage);
+  assert.ok(loaded.warning);
+  assert.equal(loaded.session.balance, s.balance + 21000);
+  assert.deepEqual(loaded.session.bets, { player: 0, tie: 0, banker: 5000 });
+  assert.equal(JSON.stringify(loaded.session.history), history);
+  assert.equal(JSON.stringify(loaded.session.totals), totals);
+  saveSession(storage, loaded.session);
+  assert.equal(loadSession(storage).session.balance, loaded.session.balance);
+  assert.equal(loadSession(storage).warning, null);
+});
+
+test('invalid pending wagers are rejected before dealing or changing the shoe', () => {
+  const s = newSession(); s.bets.player = 1000;
+  const before = JSON.stringify(s);
+  assert.throws(() => playRound(s, undefined, true));
+  assert.equal(JSON.stringify(s), before);
 });

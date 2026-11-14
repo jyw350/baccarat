@@ -1,9 +1,9 @@
-import { INITIAL_BALANCE, CHIP_VALUES, emptyBets, totalBet, validBets, prepareShoe, dealRound, settleBets, summarize } from './engine.js';
+import { INITIAL_BALANCE, CHIP_VALUES, SIDES, BET_LIMITS, assertBetLimits, emptyBets, totalBet, validBets, prepareShoe, dealRound, settleBets, summarize } from './engine.js';
 
 export const STORAGE_KEY = 'baccarat-table.session.v1';
 export function newSession() {
   return { version: 1, balance: INITIAL_BALANCE, bets: emptyBets(), lastBets: emptyBets(),
-    selectedChip: 1000, shoe: prepareShoe(), shoeNumber: 1, history: [], roundNumber: 0,
+    selectedChip: 5000, shoe: prepareShoe(), shoeNumber: 1, history: [], roundNumber: 0,
     totals: summarize([]), lastProfit: 0, settings: { fast: false, sound: false } };
 }
 
@@ -32,7 +32,14 @@ export function loadSession(storage) {
     if (!raw) return { session: newSession(), warning: null };
     const parsed = JSON.parse(raw);
     if (!validateSession(parsed)) throw new Error('Invalid session');
-    return { session: parsed, warning: null };
+    let refunded = false;
+    for (const side of SIDES) {
+      const amount = parsed.bets[side], { min, max } = BET_LIMITS[side];
+      if (amount && (amount < min || amount > max)) {
+        parsed.balance += amount; parsed.bets[side] = 0; refunded = true;
+      }
+    }
+    return { session: parsed, warning: refunded ? '새 배팅 한도에 맞지 않는 미정산 배팅을 잔액으로 반환했습니다. 기존 기록과 통계는 유지됩니다.' : null };
   } catch {
     return { session: newSession(), warning: '저장된 기록을 불러오지 못해 새 세션을 시작했습니다.' };
   }
@@ -45,12 +52,13 @@ export function saveSession(storage, session) {
 
 // Complete settlement once, before visual animation starts. Reloading cannot pay twice.
 export function playRound(session, now = new Date().toISOString(), allowEmpty = false) {
+  assertBetLimits(session.bets);
   if (!allowEmpty && !totalBet(session.bets)) throw new Error('먼저 배팅할 영역을 선택해주세요.');
   if (session.shoe.length <= 14) {
     session.shoe = prepareShoe(); session.shoeNumber++;
   }
   const result = dealRound(session.shoe);
-  const settlement = settleBets(session.bets, result.winner);
+  const settlement = settleBets(session.bets, result.winner, result.bankerTotal);
   const record = { ...result, ...settlement, bets: { ...session.bets },
     id: ++session.roundNumber, shoeNumber: session.shoeNumber, time: now };
   session.balance += settlement.returned;

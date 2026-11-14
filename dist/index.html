@@ -40,7 +40,7 @@
 
     <section class="felt" aria-label="바카라 배팅 테이블">
       <svg class="table-lines" viewBox="0 0 1600 520" preserveAspectRatio="none" aria-hidden="true"><path d="M-80 4 Q800 164 1680 4"/><path d="M-80 42 Q800 210 1680 42"/><path d="M-80 430 Q800 586 1680 430"/></svg>
-      <div class="felt-side-note left-note"><span>♠</span><b>BACCARAT</b><small>COMMISSION TABLE</small></div>
+      <div class="felt-side-note left-note"><span>♠</span><b>BACCARAT</b><small>NO COMMISSION</small></div>
       <div class="felt-side-note right-note"><span>8</span><b>DECK SHOE</b><small>PLAYER · TIE · BANKER</small></div>
       <div class="table-center">
         <div class="pair-row"><button class="pair-zone player-pair" disabled><span>플레이어 페어</span><small>11대1 · 배팅 미지원</small></button><div class="table-ornament" aria-hidden="true">― ⟡ ―</div><button class="pair-zone banker-pair" disabled><span>뱅커 페어</span><small>11대1 · 배팅 미지원</small></button></div>
@@ -57,18 +57,18 @@
           <button class="bet-zone banker-zone" id="bet-banker" data-side="banker" aria-label="뱅커에 선택한 칩 배팅">
             <span class="zone-surface"></span><span class="zone-heading"><span class="zone-en">BANKER</span><strong>뱅커</strong></span>
             <span class="hand" id="hand-banker" aria-label="뱅커 카드"></span><span class="hand-score" id="score-banker"></span>
-            <span class="wager" id="wager-banker"></span><span class="payout">1대0.95 지급</span><span class="winner-tag">WINNER</span>
+            <span class="wager" id="wager-banker"></span><span class="payout">1대1 지급<br><small>6점 승리 시 1대0.5</small></span><span class="winner-tag">WINNER</span>
           </button>
         </div>
       </div>
-      <div class="table-footnote"><span>가상 칩 전용 · 현금 가치 없음</span><span id="deck-info">8 DECKS · STANDARD BACCARAT</span><span>최소 배팅 ₩1,000</span></div>
+      <div class="table-footnote"><span>가상 칩 전용 · 현금 가치 없음</span><span id="deck-info">8 DECKS · STANDARD BACCARAT</span><span>P·B ₩5,000~100,000 / T ₩1,000~10,000</span></div>
     </section>
 
     <footer class="console">
       <div class="balance-panel"><div class="balance-label"><span>보유 가상 금액</span><span class="bet-availability" id="bet-availability">배팅 가능</span></div><strong class="balance-amount" id="balance">₩1,000,000</strong><div class="money-details"><div><span>총 배팅 금액</span><strong id="total-bet">₩0</strong></div><div><span>직전 게임 손익</span><strong id="last-profit">₩0</strong></div></div></div>
-      <div class="chip-tray"><div class="tray-caption"><span>SELECT YOUR CHIP</span><span id="selected-chip-label">선택한 칩 ₩1,000</span></div><div class="chips" role="group" aria-label="배팅 칩 선택">
-        <button class="casino-chip chip-1000 selected" data-chip="1000" aria-label="1,000원 칩 선택" aria-pressed="true"><span class="chip-face"><small>VIRTUAL CHIP</small><strong>₩1,000</strong><span>♠</span></span></button>
-        <button class="casino-chip chip-5000" data-chip="5000" aria-label="5,000원 칩 선택" aria-pressed="false"><span class="chip-face"><small>VIRTUAL CHIP</small><strong>₩5,000</strong><span>♠</span></span></button>
+      <div class="chip-tray"><div class="tray-caption"><span>SELECT YOUR CHIP</span><span id="selected-chip-label">선택한 칩 ₩5,000</span></div><div class="chips" role="group" aria-label="배팅 칩 선택">
+        <button class="casino-chip chip-1000" data-chip="1000" aria-label="1,000원 칩 선택" aria-pressed="false"><span class="chip-face"><small>VIRTUAL CHIP</small><strong>₩1,000</strong><span>♠</span></span></button>
+        <button class="casino-chip chip-5000 selected" data-chip="5000" aria-label="5,000원 칩 선택" aria-pressed="true"><span class="chip-face"><small>VIRTUAL CHIP</small><strong>₩5,000</strong><span>♠</span></span></button>
         <button class="casino-chip chip-10000" data-chip="10000" aria-label="10,000원 칩 선택" aria-pressed="false"><span class="chip-face"><small>VIRTUAL CHIP</small><strong>₩10,000</strong><span>♠</span></span></button>
         <button class="casino-chip chip-100000" data-chip="100000" aria-label="100,000원 칩 선택" aria-pressed="false"><span class="chip-face"><small>VIRTUAL CHIP</small><strong>₩100,000</strong><span>♠</span></span></button>
       </div></div>

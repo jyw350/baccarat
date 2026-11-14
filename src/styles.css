@@ -834,6 +834,7 @@ svg {
 }
 
 .payout {
+  text-align:center;
   margin-top:auto;
   font-size:14px;
   letter-spacing:2px;
